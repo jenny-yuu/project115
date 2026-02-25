@@ -5,6 +5,8 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 import datetime
 import urllib3
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import pandas as pd
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -47,8 +49,14 @@ def safe_float(x):
         return 0.0
 
 def cwa_get_json(url: str):
+    # 建立具有重試機制的連線 Session (解決 GitHub Actions 偶發連線逾時問題)
+    session = requests.Session()
+    retries = Retry(total=5, backoff_factor=2, status_forcelist=[ 500, 502, 503, 504 ])
+    session.mount('https://', HTTPAdapter(max_retries=retries))
+
     params = {"Authorization": CWA_KEY, "format": "JSON"}
-    r = requests.get(url, params=params, timeout=30, verify=False)
+    # 將 timeout 延長至 60 秒
+    r = session.get(url, params=params, timeout=60, verify=False)
     r.raise_for_status()
     return r.json()
 
