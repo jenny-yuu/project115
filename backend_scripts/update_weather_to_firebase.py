@@ -176,7 +176,11 @@ def update_firebase_weather(db):
                 station_weather[sid]["WindSpeed"] = float(wx_match.iloc[0]["WindSpeed"])
                 station_weather[sid]["PeakGustSpeed"] = float(wx_match.iloc[0]["PeakGustSpeed"])
                 station_weather[sid]["AirTemperature"] = float(wx_match.iloc[0]["AirTemperature"])
-                station_weather[sid]["WeatherDesc"] = str(wx_match.iloc[0]["WeatherDesc"])
+                # 如果過去一小時有雨，強制加上標示
+                w_desc = str(wx_match.iloc[0]["WeatherDesc"])
+                if station_weather[sid].get("RainPast1Hr", 0) > 0.0 and "雨" not in w_desc:
+                    w_desc += " (降雨中)"
+                station_weather[sid]["WeatherDesc"] = w_desc
 
     print(f"👉 共有 {len(station_weather)} 個台鐵車站找到對應的天氣更新。開始寫入 Firebase...")
     
