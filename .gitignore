@@ -3,6 +3,5 @@
 __pycache__/
 *.json
 error_trace.txt
-requirements.txt
 venv/
 .vscode/
