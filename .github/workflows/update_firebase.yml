@@ -1,0 +1,37 @@
+name: Auto Update Firebase (10 mins)
+
+on:
+  schedule:
+    # 改為每 5 分鐘自動更新 (火車誤點資訊需要越快越好)
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 檢出程式碼
+        uses: actions/checkout@v4
+
+      - name: 🐍 設定 Python 環境
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip' # 快取 pip package 加快啟動
+
+      - name: 📦 安裝相依套件
+        run: |
+          pip install -r requirements.txt
+
+      - name: 🔑 建立 Firebase 金鑰檔案
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > your-firebase-adminsdk.json
+
+      - name: 🚂 執行 台鐵即時誤點 更新腳本
+        run: |
+          python -u update_live_delay_to_firebase.py
+
+      - name: ⛅ 執行 天氣預報 更新腳本
+        run: |
+          python -u update_weather_to_firebase.py
