@@ -15,18 +15,11 @@ import re
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# 載入環境變數
-env_path = r"C:\Users\jenny\OneDrive\桌面\大專生計畫\.env"
-if os.path.exists(env_path):
-    print(f"✅ 找到環境變數檔案: {env_path}")
-    load_dotenv(dotenv_path=env_path, override=True)
-else:
-    # 備援路徑測試
-    env_path = r"C:\Users\jenny\OneDrive\桌面\115 專題\.env"
-    if os.path.exists(env_path):
-        load_dotenv(dotenv_path=env_path, override=True)
-    else:
-        print(f"❌ 找不到環境變數檔案")
+# 取得當前腳本所在的目錄
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# 載入環境變數 (本地端使用 .env，雲端由 Render 提供)
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 # 驗證關鍵變數
 openai_key = os.getenv("OPENAI_API_KEY")
@@ -35,7 +28,8 @@ print(f"   OpenAI Key 載入狀態: {'已載入' if openai_key else '未載入'}
 print(f"   Pinecone Key 載入狀態: {'已載入' if pinecone_key else '未載入'}")
 
 app = Flask(__name__)
-CORS(app)
+# 允許跨網域請求 (重要：讓 Android 手機連線)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # 初始化 API 客戶端
 try:
@@ -51,25 +45,22 @@ TDX_CLIENT_SECRET = os.getenv("TDX_CLIENT_SECRET")
 
 # 初始化 Firebase
 try:
-    CRED_PATH = r"C:\Users\jenny\OneDrive\桌面\115 專題\your-firebase-adminsdk.json"
-    if not os.path.exists(CRED_PATH):
-        # 嘗試在大專生計畫目錄找
-        CRED_PATH = r"C:\Users\jenny\OneDrive\桌面\大專生計畫\your-firebase-adminsdk.json"
+    # 使用相對路徑尋找金鑰
+    CRED_PATH = os.path.join(BASE_DIR, "your-firebase-adminsdk.json")
     
-    if not firebase_admin._apps:
+    if os.path.exists(CRED_PATH) and not firebase_admin._apps:
         cred = credentials.Certificate(CRED_PATH)
         firebase_admin.initialize_app(cred)
+        print("✅ Firebase 初始化成功")
     db = firestore.client()
 except Exception as e:
-    print(f"⚠️ Firebase 初始化失敗: {e}")
+    print(f"⚠️ Firebase 初始化失敗 (可能是缺少 JSON 金鑰): {e}")
     db = None
 
-# ─────────────── 完整路徑配置 ───────────────
+# 配置相對路徑
 PATHS = {
-    "PROJECT_DIR": r"D:\Android_Project\project115",
-    "RESEARCH_DIR": r"C:\Users\jenny\OneDrive\桌面\大專生計畫",
-    "FIREBASE_KEY": r"C:\Users\jenny\OneDrive\桌面\115 專題\your-firebase-adminsdk.json",
-    "ENV_FILE": r"C:\Users\jenny\OneDrive\桌面\大專生計畫\.env"
+    "PROJECT_DIR": BASE_DIR,
+    "MAPPING_FILE": os.path.join(BASE_DIR, "fb_stations.json")
 }
 
 # ─────────────── 工具函數 ───────────────
@@ -77,7 +68,7 @@ PATHS = {
 def get_station_id(station_name: str) -> str:
     """從 fb_stations.json 或 tdx_names 尋找車站 ID"""
     try:
-        mapping_path = os.path.join(PATHS["PROJECT_DIR"], "fb_stations.json")
+        mapping_path = PATHS["MAPPING_FILE"]
         if os.path.exists(mapping_path):
             with open(mapping_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
