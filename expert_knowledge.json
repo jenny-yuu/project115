@@ -1,0 +1,65 @@
+[
+  {
+    "id": "sop_earthquake_mag4",
+    "category": "官方SOP-地震",
+    "situation": "芮氏規模 4.0 以上（地表加速度達 40gal）",
+    "solution": "自動發出警報，列車啟動緊急煞車，降速巡軌。",
+    "recovery_time": "1 ~ 2 小時 (視區間長度而定)",
+    "source": "台鐵監測系統SOP"
+  },
+  {
+    "id": "sop_earthquake_mag5",
+    "category": "官方SOP-地震",
+    "situation": "芮氏規模 5.0 以上（強震）",
+    "solution": "變電站自動斷電，列車立即停車。需進行工務（軌道/橋梁/隧道）及電務（電車線）全面手動巡查。",
+    "recovery_time": "2 ~ 4 小時 (無災損情況下)",
+    "source": "台鐵災害通報要點"
+  },
+  {
+    "id": "risk_guangfu_flood",
+    "location": "光復站",
+    "category": "場域風險-淹水",
+    "situation": "強降雨、颱風（如鳳凰、凱米）",
+    "description": "光復站位於低窪區，曾因堰塞湖溢流導致淹水，且光復隧道北口易積水。",
+    "solution": "預警性停駛（鳳林-瑞穗區間），待水利署完成導流後方可恢復。",
+    "source": "新聞及歷史通報彙整"
+  },
+  {
+    "id": "risk_chongde_landslide",
+    "location": "崇德、和仁、大清水",
+    "category": "場域風險-土石流",
+    "situation": "強震（0403地震）或豪大雨",
+    "description": "該路段為東部最脆弱邊坡，易有土石流覆蓋路線、電車線斷落。小清水溪橋有沖毀風險。",
+    "solution": "全面封閉，待重機具進場清理，結構技師鑑定橋梁安全後恢復。",
+    "recovery_time": "12 小時 ~ 數日 (視災損而定)",
+    "source": "成大防災中心及鐵研所報告"
+  },
+  {
+    "id": "risk_ruisui_sanmin",
+    "location": "瑞穗、三民",
+    "category": "場域風險-邊坡/淹水",
+    "situation": "累積雨量大於標竿數值",
+    "description": "曾有軌面淹水與地錨邊坡不穩定紀錄。",
+    "solution": "預約巡軌，依雨量警戒降速行駛。",
+    "source": "台鐵邊坡管理計畫"
+  },
+  {
+    "id": "history_guanshan_jinlun",
+    "location": "關山、金崙",
+    "category": "歷史案例-地震回復",
+    "situation": "傍晚發生地震導致東部幹線停駛",
+    "description": "工務及電務單位進行全線巡查。",
+    "solution": "預計3小時內完成巡查並恢復通行。",
+    "recovery_time": "約 3 小時",
+    "source": "台鐵歷史運行紀錄"
+  },
+  {
+    "id": "history_yilan_recovery",
+    "location": "宜蘭線",
+    "category": "歷史案例-地震回復",
+    "situation": "宜蘭地區地震引發預防性停駛",
+    "description": "全區間路線及電力設施巡查。",
+    "recovery_time": "1.5 ~ 2 小時",
+    "source": "台鐵即時動態追蹤資料"
+  }
+]
