@@ -1,7 +1,12 @@
 .env
 *.pyc
 __pycache__/
+# 忽略所有 JSON 但排除必要的部屬檔案
 *.json
+!your-firebase-adminsdk.json
+!fb_stations.json
+!expert_knowledge.json
+!StationTransfer.json
 error_trace.txt
 venv/
 .vscode/
