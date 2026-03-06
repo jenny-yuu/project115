@@ -49,15 +49,18 @@ def safe_float(x):
         return 0.0
 
 def cwa_get_json(url: str):
-    params = {"Authorization": CWA_KEY, "format": "JSON"}
+    # 將 Authorization 改放在 Headers 中 (有時比放在 Params 穩定)
+    headers = {"Authorization": CWA_KEY, "Accept": "application/json"}
+    
     # 增加更強大的重試機制 (針對 500, 502, 503, 504)
     from requests.adapters import HTTPAdapter
     from urllib3.util.retry import Retry
     
     session = requests.Session()
+    # connect=重試次數, backoff_factor=指數性等待, status_forcelist=遇到哪些錯誤要重試
     retry = Retry(
-        total=5, 
-        backoff_factor=2, 
+        total=3, # 減少為 3 次避免等太久，但增加 backoff
+        backoff_factor=5, 
         status_forcelist=[500, 502, 503, 504],
         allowed_methods=["GET"]
     )
@@ -65,8 +68,8 @@ def cwa_get_json(url: str):
     session.mount('https://', adapter)
     
     try:
-        # 將 timeout 增加到 90 秒
-        r = session.get(url, params=params, timeout=90, verify=False)
+        # 使用 headers 傳遞 Key，params 只傳 format
+        r = session.get(url, params={"format": "JSON"}, headers=headers, timeout=60, verify=False)
         r.raise_for_status()
         return r.json()
     except Exception as e:
