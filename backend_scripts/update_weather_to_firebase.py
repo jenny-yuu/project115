@@ -49,21 +49,37 @@ def safe_float(x):
         return 0.0
 
 def cwa_get_json(url: str):
-    # 建立具有重試機制的連線 Session (解決 GitHub Actions 偶發連線逾時問題)
-    session = requests.Session()
-    retries = Retry(total=5, backoff_factor=2, status_forcelist=[ 500, 502, 503, 504 ])
-    session.mount('https://', HTTPAdapter(max_retries=retries))
-
     params = {"Authorization": CWA_KEY, "format": "JSON"}
-    # 將 timeout 延長至 60 秒
-    r = session.get(url, params=params, timeout=60, verify=False)
-    r.raise_for_status()
-    return r.json()
+    # 增加更強大的重試機制 (針對 500, 502, 503, 504)
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
+    
+    session = requests.Session()
+    retry = Retry(
+        total=5, 
+        backoff_factor=2, 
+        status_forcelist=[500, 502, 503, 504],
+        allowed_methods=["GET"]
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('https://', adapter)
+    
+    try:
+        # 將 timeout 增加到 90 秒
+        r = session.get(url, params=params, timeout=90, verify=False)
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        print(f"⚠️ CWA API 請求失敗 (經過重試依然失敗): {e}")
+        return None
 
 def fetch_rain_data():
     """抓取全台即時雨量並轉為 DataFrame"""
     print("下載即時雨量...")
     data = cwa_get_json(RAIN_URL)
+    if not data: 
+        return pd.DataFrame(columns=["StationId", "RainPast1Hr", "RainPast24Hr"])
+    
     stations = data.get("records", {}).get("Station", [])
     rows = []
     for s in stations:
@@ -80,6 +96,8 @@ def fetch_wx_data():
     """抓取全台天氣觀測實測 (風速、溫度等)"""
     print("下載即時綜觀氣象...")
     data = cwa_get_json(WX_URL)
+    if not data: 
+        return pd.DataFrame(columns=["StationId", "WindSpeed", "PeakGustSpeed", "AirTemperature", "WeatherDesc"])
     stations = data.get("records", {}).get("Station", [])
     rows = []
     for s in stations:
@@ -103,6 +121,7 @@ def fetch_forecast_data():
     """抓取全台三十六小時天氣預報 (縣市層級)"""
     print("下載三十六小時預報...")
     data = cwa_get_json(FCST_URL)
+    if not data: return {}
     locs = data.get("records", {}).get("location", [])
     forecast_map = {}
     for loc in locs:
