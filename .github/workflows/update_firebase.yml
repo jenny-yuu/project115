@@ -25,9 +25,11 @@ jobs:
           pip install -r requirements.txt
 
       - name: 🔑 建立 Firebase 金鑰檔案 (如果有設定 Secret)
-        if: secrets.FIREBASE_SERVICE_ACCOUNT != ''
+        env:
+          FB_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        if: ${{ env.FB_SERVICE_ACCOUNT != '' }}
         run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > your-firebase-adminsdk.json
+          echo "$FB_SERVICE_ACCOUNT" > your-firebase-adminsdk.json
 
       - name: 🚂 執行 台鐵即時誤點 更新腳本
         run: |
