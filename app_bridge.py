@@ -288,27 +288,48 @@ def index():
 
 @app.route('/ask_ai', methods=['POST'])
 def ask_ai():
-    data = request.json
-    query = data.get('query', '')
-    delay_time = data.get('delay_time', 0)
-    is_suspended = data.get('is_suspended', False)
-    station_name = data.get('station_name', '')
-    sim_type = data.get('sim_type', '')
-    sim_intensity = data.get('sim_intensity', 0)
-
-    print(f"--- [DEBUG] 新請求: {station_name} (延誤: {delay_time}m, 停駛: {is_suspended}, Sim: {sim_type} {sim_intensity}) ---")
-
     try:
+        data = request.json
+        if not data:
+            return jsonify({
+                "structured": {
+                    "summary": "請求無效",
+                    "ai_advice": "接收到空請求，請重試。",
+                    "routes": [],
+                    "emergency": "",
+                    "nav_dest": "",
+                    "sources": ""
+                },
+                "is_serious": False
+            }), 400
+            
+        query = data.get('query', '')
+        delay_time = data.get('delay_time', 0)
+        is_suspended = data.get('is_suspended', False)
+        station_name = data.get('station_name', '')
+        sim_type = data.get('sim_type', '')
+        sim_intensity = data.get('sim_intensity', 0)
+
+        print(f"--- [DEBUG] 新請求: {station_name} (延誤: {delay_time}m, 停駛: {is_suspended}, Sim: {sim_type} {sim_intensity}) ---")
+
         # 1. RAG 向量搜尋
         print("1. 生成 Embedding...")
-        query_vector = get_embedding(query)
+        try:
+            query_vector = get_embedding(query)
+        except Exception as e:
+            print(f"❌ OpenAI Embedding 失敗: {e}")
+            raise e
 
         print("2. 查詢 Pinecone...")
-        search_results = pinecone_index.query(
-            vector=query_vector,
-            top_k=5,
-            include_metadata=True
-        )
+        try:
+            search_results = pinecone_index.query(
+                vector=query_vector,
+                top_k=5,
+                include_metadata=True
+            )
+        except Exception as e:
+            print(f"❌ Pinecone 查詢失敗: {e}")
+            raise e
 
         context_texts = []
         sources_list = []
@@ -339,46 +360,35 @@ def ask_ai():
         print(f"3. 查詢 {station_name} 的即時交通資訊...")
         try:
             tdx_token = get_tdx_token()
-            print(f"   TDX Token: {'取得成功' if tdx_token else '失敗'}")
-        except Exception as tdx_e:
-            print(f"   ❌ TDX Token 取得異常: {tdx_e}")
+        except:
             tdx_token = None
             
         bus_text = ""
         official_transfer_text = ""
         user_dest = data.get('destination', '')
         
-        print(f"   正在搜尋網頁資訊... (目的地: {user_dest})")
         try:
             search_text = search_bus_info(station_name, user_dest)
-            print(f"   網頁搜尋成功，結果長度: {len(search_text)}")
-        except Exception as search_e:
-            print(f"   ❌ 網頁搜尋異常: {search_e}")
-            search_text = "（無法執行網頁搜尋）"
+        except:
+            search_text = "（網路搜尋暫時無法使用）"
 
         if station_name:
             if tdx_token:
-                print(f"   正在查詢 {station_name} 的即時公車...")
-                bus_schedules = get_nearby_bus_schedules(station_name, tdx_token)
-                if bus_schedules:
-                    bus_text = format_bus_schedules(bus_schedules)
-                    print(f"   找到 {len(bus_schedules)} 筆公車資訊")
+                try:
+                    bus_schedules = get_nearby_bus_schedules(station_name, tdx_token)
+                    if bus_schedules:
+                        bus_text = format_bus_schedules(bus_schedules)
+                except: pass
                 
-                # 取得台鐵官方內部/跨運具指南
-                official_transfer_text = get_official_transfers(station_name, tdx_token)
+                try:
+                    official_transfer_text = get_official_transfers(station_name, tdx_token)
+                except: pass
             else:
-                print("   ⚠️ 無 TDX Token，僅依賴網頁搜尋與靜態資料")
-                # 嘗試在無 token 情況下讀取本地靜態資料
                 official_transfer_text = get_official_transfers(station_name, None)
 
         # 3. 呼叫 GPT
-        print("4. 呼叫 GPT-4o-mini...")
-
         if is_suspended:
-            if sim_type:
-                situation_desc = f"模擬災害：{sim_type} (強度: {sim_intensity})"
-            else:
-                situation_desc = "列車停駛（紅燈警示）"
+            situation_desc = f"模擬災害：{sim_type} (強度: {sim_intensity})" if sim_type else "列車停駛（紅燈警示）"
             advice_focus = f"目前的狀況是 {situation_desc}。重點推薦替代交通工具（客運或計程車），並參照官方轉乘資訊。"
         else:
             situation_desc = f"列車延誤 {delay_time} 分鐘" if delay_time > 0 else "目前正常行駛"
@@ -404,50 +414,25 @@ def ask_ai():
 請「務必」以 JSON 格式回答，包含以下欄位：
 1. "summary": 15字以內的簡短狀況總結。
 2. "ai_advice": 給乘客的提醒（40字以內），必須具有同理心，提醒安全。
-3. "routes": 列表，作為畫面的「應變建議」，【數量要求】：必須提供 3~5 個建議項目。每個元素：
-    - "type": "train", "bus", or "other"
-    - "title": 路線名稱（若有真實班次則包含路線號碼，例如：846 客運 → 平溪；若無班次則描述行為，例如：前往站前區民廣場搭公車）
-    - "departure": 發車時間，若無預估則留空
-    - "duration": 預估車程
-    - "priority": "急件" 或 "建議"
+3. "routes": 列表，包含 3~5 個建議項目（type: train/bus/other, title, departure, duration, priority: 急件/建議）。
 4. "emergency": 嚴重警示文字，僅在天災停駛時填寫。
-5. "nav_dest": **極重要：建議導航的目的地關鍵字**。
-   【規則】：必須是具體的店名、站牌地址或地標，且必須包含「台灣」和「縣市」名稱，以確保 Google Maps 不會定位到國外。
-   例如：「台灣新北市瑞芳區明燈路三段19號（區民廣場）」或「台灣台東縣關山鎮關山轉運站」。
-
-【重要：生成建議規則】
-1. **資料優先權**：請務必細讀【TDX 台鐵官方轉乘資訊】中的地址。若資料中有出現完整地址（通常在括號內，例如：瑞芳區明燈路...），請**優先且完整地**填入 `nav_dest` 欄位。
-2. **導航精準度**：`nav_dest` 必須是能讓 Google Maps 直接定位的地點或地址。如果官方資料有地址，請直接使用該地址；若無地址，則使用「台灣 + 縣市 + 具體站牌名」。
-3. **數量保證**：至少生成 3 個建議項目，嚴禁空回。
-4. **網路援引**：若即時班次不足，請參考網頁建議（例如瑞芳往平溪可能搭公車）。
+5. "nav_dest": 建議導航的目的地關鍵字（必須包含「台灣」與「縣市」，且優先使用官方標註的地址）。
 """
 
-        print(f"4. 呼叫 GPT-4o-mini... (Prompt 長度: {len(prompt)})")
-        try:
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt}],
-                response_format={"type": "json_object"},
-                max_tokens=800,
-                temperature=0.3,
-                timeout=25
-            )
-            raw_json = response.choices[0].message.content
-            print(f"✅ AI 原始回覆: {raw_json}")
-        except Exception as ai_e:
-            print(f"❌ OpenAI API 呼叫失敗: {ai_e}")
-            raise ai_e
-
-        try:
-            structured_data = json.loads(raw_json)
-        except Exception as json_e:
-            print(f"❌ JSON 解析 AI 回覆失敗: {json_e}")
-            raise json_e
+        print("4. 呼叫 GPT-4o-mini...")
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+            max_tokens=800,
+            temperature=0.3,
+            timeout=25
+        )
+        raw_json = response.choices[0].message.content
+        structured_data = json.loads(raw_json)
             
-        # 強制過濾非停駛狀態的警語，避免 AI 產生多餘的紅字
         if not is_suspended:
             structured_data["emergency"] = ""
-            
         structured_data["sources"] = sources_summary
 
         return jsonify({
@@ -456,21 +441,16 @@ def ask_ai():
         })
 
     except Exception as e:
-        print(f"❌ 錯誤詳情: {e}")
-        import traceback
+        print(f"❌ ask_ai 發生錯誤: {e}")
         traceback.print_exc()
-        try:
-            with open("error_trace.txt", "w", encoding="utf-8") as f:
-                f.write(traceback.format_exc())
-        except: pass
         return jsonify({
             "structured": {
-                "summary": "系統連線中",
-                "ai_advice": "建議向站務人員詢問替代方案。",
+                "summary": "後端服務異常",
+                "ai_advice": f"抱歉，後端發生錯誤：{str(e)[:50]}... 請稍後再試。",
                 "routes": [],
-                "emergency": "",
-                "nav_dest": "",
-                "sources": ""
+                "emergency": "請依站務人員指示行動",
+                "nav_dest": "台灣台東縣瑞穗鄉瑞穗車站",
+                "sources": "系統診斷模式"
             },
             "is_serious": False
         }), 200
