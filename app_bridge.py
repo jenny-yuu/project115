@@ -17,6 +17,8 @@ from firebase_admin import credentials, firestore
 
 # 取得當前腳本所在的目錄
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+print(f"--- [STARTUP] BASE_DIR: {BASE_DIR} ---")
+print(f"--- [STARTUP] Files in directory: {os.listdir(BASE_DIR)} ---")
 
 # 載入環境變數 (本地端使用 .env，雲端由 Render 提供)
 load_dotenv(os.path.join(BASE_DIR, ".env"))
