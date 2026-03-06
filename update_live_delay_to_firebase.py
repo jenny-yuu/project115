@@ -41,7 +41,7 @@ def get_token():
             "client_id": TDX_ID,
             "client_secret": TDX_SECRET,
         },
-        timeout=30,
+        timeout=60,
     )
     r.raise_for_status()
     return r.json()["access_token"]
@@ -50,7 +50,7 @@ def fetch_live_delay():
     """抓取 TDX 台鐵即時誤點資料"""
     token = get_token()
     headers = {"authorization": f"Bearer {token}", "accept": "application/json"}
-    r = requests.get(LIVE_DELAY_URL, headers=headers, params={"$format": "JSON"}, timeout=30)
+    r = requests.get(LIVE_DELAY_URL, headers=headers, params={"$format": "JSON"}, timeout=60)
     r.raise_for_status()
     return r.json()
 

@@ -48,7 +48,17 @@ def safe_float(x):
 
 def cwa_get_json(url: str):
     params = {"Authorization": CWA_KEY, "format": "JSON"}
-    r = requests.get(url, params=params, timeout=30, verify=False)
+    # 增加重試機制與更長的超時時間 (應對氣象署 API 偶爾緩慢的情況)
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
+    
+    session = requests.Session()
+    retry = Retry(connect=3, backoff_factor=1)
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('https://', adapter)
+    
+    # 將 timeout 增加到 60 秒
+    r = session.get(url, params=params, timeout=60, verify=False)
     r.raise_for_status()
     return r.json()
 
