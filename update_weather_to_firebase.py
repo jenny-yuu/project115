@@ -76,7 +76,8 @@ def fetch_rain_data():
     """抓取全台即時雨量並轉為 DataFrame"""
     print("下載即時雨量...")
     data = cwa_get_json(RAIN_URL)
-    if not data: return pd.DataFrame() # 回傳空表避免 crash
+    if not data: 
+        return pd.DataFrame(columns=["StationId", "RainPast1Hr", "RainPast24Hr"])
     
     stations = data.get("records", {}).get("Station", [])
     rows = []
@@ -94,7 +95,8 @@ def fetch_wx_data():
     """抓取全台天氣觀測實測 (風速、溫度等)"""
     print("下載即時綜觀氣象...")
     data = cwa_get_json(WX_URL)
-    if not data: return pd.DataFrame()
+    if not data: 
+        return pd.DataFrame(columns=["StationId", "WindSpeed", "PeakGustSpeed", "AirTemperature", "WeatherDesc"])
     stations = data.get("records", {}).get("Station", [])
     rows = []
     for s in stations:

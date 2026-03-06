@@ -48,14 +48,22 @@ def get_token():
 
 def fetch_live_delay():
     """抓取 TDX 台鐵即時誤點資料"""
-    token = get_token()
-    headers = {"authorization": f"Bearer {token}", "accept": "application/json"}
-    r = requests.get(LIVE_DELAY_URL, headers=headers, params={"$format": "JSON"}, timeout=60)
-    r.raise_for_status()
-    return r.json()
+    try:
+        token = get_token()
+        headers = {"authorization": f"Bearer {token}", "accept": "application/json"}
+        r = requests.get(LIVE_DELAY_URL, headers=headers, params={"$format": "JSON"}, timeout=60)
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        print(f"⚠️ TDX API 請求失敗: {e}")
+        return None
 
 def update_firebase_delay(db, delay_data):
     """將即時誤點資料更新回 Firebase 的 stations 集合內"""
+    if delay_data is None:
+        print("⚠️ 無法獲取即時誤點資料，跳過更新。")
+        return
+        
     print(f"準備分析 {len(delay_data)} 筆全台即時列車狀態...")
     
     # 用字典整理每個車站的誤點資訊：我們記錄該站「最大的誤點時間」及「受影響車次清單」
