@@ -10,11 +10,8 @@ from pinecone import Pinecone
 
 # ─────────────── 設定區 ───────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PATHS = {
-    "RESEARCH_DIR": r"C:\Users\jenny\OneDrive\桌面\115 專題",
-    "PROJECT_DIR": r"D:\Android_Project\project115",
-    "BACKEND_scripts": r"D:\Android_Project\project115\backend_scripts"
-}
+# 移除寫死路徑，改為自動偵測
+# 優先順序：1. 當前目錄 2. 環境變數 3. 預設結構
 
 app = Flask(__name__)
 CORS(app)
@@ -99,8 +96,6 @@ def get_taxi_fare_str(station_name: str) -> str:
 def get_station_id(name: str) -> str:
     # 優先檢查當前目錄下的 fb_stations.json
     path = os.path.join(BASE_DIR, "fb_stations.json")
-    if not os.path.exists(path):
-        path = r"D:\Android_Project\project115\fb_stations.json"
     if not os.path.exists(path): return None
     try:
         with open(path, 'r', encoding='utf-8') as f:
@@ -111,7 +106,7 @@ def get_station_id(name: str) -> str:
     return None
 
 def get_official_transfers(station_name: str, token: str) -> str:
-    """整合 Firebase (Cloud), D 槽 (Project), OneDrive (Research) 的多方轉乘資料"""
+    """整合本地與雲端的多方轉乘資料"""
     if not station_name: return ""
     
     output = []
@@ -119,14 +114,9 @@ def get_official_transfers(station_name: str, token: str) -> str:
     sid = get_station_id(station_name)
     fare_note = get_taxi_fare_str(station_name)
 
-    # 1. 【最強優先】Firebase Cloud 資料
-    
-    # 2. 【二級優先】Local scraped_transfers.json
+    # 1. 【優先】本地 scraped_transfers.json (通常位於根目錄)
     try:
         scraped_path = os.path.join(BASE_DIR, "scraped_transfers.json")
-        if not os.path.exists(scraped_path):
-            scraped_path = r"D:\Android_Project\project115\scraped_transfers.json"
-            
         if os.path.exists(scraped_path):
             with open(scraped_path, 'r', encoding='utf-8') as f:
                 scraped_data = json.load(f)
@@ -144,14 +134,11 @@ def get_official_transfers(station_name: str, token: str) -> str:
                     if output: return "\n\n".join(output)
     except: pass
 
-    # 3. 【三級優先】StationTransfer.json
+    # 2. 【次之】StationTransfer.json
     try:
-        research_path = r"D:\Android_Project\project115\StationTransfer.json"
-        if not os.path.exists(research_path):
-            research_path = r"C:\Users\jenny\OneDrive\桌面\115 專題\StationTransfer.json"
-            
-        if os.path.exists(research_path):
-            with open(research_path, 'r', encoding='utf-8') as f:
+        static_path = os.path.join(BASE_DIR, "StationTransfer.json")
+        if os.path.exists(static_path):
+            with open(static_path, 'r', encoding='utf-8') as f:
                 static_data = json.loads(f.read()).get('StationTransfers', [])
                 for s in static_data:
                     if station_name in s.get('StationName', {}).get('Zh_tw', ''):
