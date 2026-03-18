@@ -5,23 +5,26 @@ from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
 
 # Load the API keys from .env file
-env_path = r"C:\Users\jenny\OneDrive\桌面\大專生計畫\.env"
-if not os.path.exists(env_path):
-    env_path = r"C:\Users\jenny\OneDrive\桌面\115 專題\.env"
+# Load the API keys from .env file
+env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
 load_dotenv(dotenv_path=env_path)
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 
 try:
     if not PINECONE_API_KEY:
-        raise ValueError("PINECONE_API_KEY is not set.")
+        # 嘗試從環境變數讀取 (Render 模式)
+        PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
+        if not PINECONE_API_KEY:
+            raise ValueError("PINECONE_API_KEY is not set.")
     pc = Pinecone(api_key=PINECONE_API_KEY)
 except Exception as e:
-    print(f"初始化 Pinecone 失敗，可能是 API Key 不正確: {e}")
+    print(f"初始化 Pinecone 失敗: {e}")
     exit(1)
 
 INDEX_NAME = "disaster-rag"
-CSV_FILE_PATH = r"C:\Users\jenny\OneDrive\桌面\大專生計畫\事故報表\accidents_with_embeddings.csv"
+# 改為相對路徑，建議放在專案根目錄下
+CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "..", "accidents_with_embeddings.csv")
 
 def init_pinecone_index():
     print(f"正在檢查 Pinecone 中是否已經有名為 '{INDEX_NAME}' 的 Index...")
