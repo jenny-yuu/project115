@@ -82,26 +82,42 @@ except Exception as e:
     print(f"⚠️ 里程資料載入失敗: {e}")
 
 def get_taxi_fare_str(station_name: str) -> str:
-    """估算到鄰近車站的計程車資"""
-    if not station_name or station_name not in STATION_DISTANCES:
+    """估算到鄰近車站與主要轉運站的計程車資"""
+    if not station_name: return ""
+    
+    # 支援模糊匹配（處理 瑞芳 vs 瑞芳車站）
+    clean_name = station_name.replace("車站", "").replace("臺", "台")
+    target_key = next((k for k in STATION_DISTANCES.keys() if clean_name in k.replace("臺", "台")), None)
+    
+    if not target_key:
+        print(f"⚠️ 計程車資估算跳過：找不到車站 '{station_name}'")
         return ""
     
     names = list(STATION_DISTANCES.keys())
-    idx = names.index(station_name)
+    idx = names.index(target_key)
     notes = []
     
-    # 找前後站
+    # 1. 鄰近車站 (前後站)
     targets = []
     if idx > 0: targets.append(names[idx-1])
     if idx < len(names) - 1: targets.append(names[idx+1])
     
+    # 2. 主要轉運站 (Hubs)
+    HUBS = ["八堵", "瑞芳", "宜蘭", "羅東", "花蓮", "玉里", "臺東"]
+    for hub in HUBS:
+        if hub in STATION_DISTANCES and hub != target_key and hub not in targets:
+            # 只有在 30km 以內的轉運站才列入建議
+            if abs(STATION_DISTANCES[hub] - STATION_DISTANCES[target_key]) <= 30:
+                targets.append(hub)
+    
+    import math
     for t in targets:
-        dist = abs(STATION_DISTANCES[t] - STATION_DISTANCES[station_name])
+        dist = abs(STATION_DISTANCES[t] - STATION_DISTANCES[target_key])
         # 費率：1.25km(85元) + 每200m(5元)
-        import math
         fare = 85 + (math.ceil((dist - 1.25) / 0.2) * 5 if dist > 1.25 else 0)
         notes.append(f"至 {t} 約 {dist:.1f}km / 估計車資 {int(fare)} 元")
     
+    print(f"✅ 生成計程車資估算 ({target_key}): {len(notes)} 筆建議")
     return "\n".join(notes) if notes else ""
 
 # ─────────────── 工具函數 ───────────────
