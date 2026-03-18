@@ -185,6 +185,17 @@ def debug_version():
 
 @app.route('/ask_ai', methods=['POST'])
 def ask_ai():
+    # 初始化預設值，避免在 Exception 中出現 NameError
+    fare_note = ""
+    structured_data = {
+        "summary": "後端服務異常",
+        "ai_advice": "暫時無法提供建議，請稍後再試。",
+        "routes": [],
+        "emergency": "",
+        "nav_dest": "",
+        "sources": "系統診斷模式"
+    }
+    
     try:
         data = request.json
         if not data: return jsonify({"error": "empty request"}), 400
