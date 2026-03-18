@@ -24,7 +24,7 @@ except Exception as e:
 
 INDEX_NAME = "disaster-rag"
 # 改為相對路徑，建議放在專案根目錄下
-CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "..", "accidents_with_embeddings.csv")
+CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "accidents_with_embeddings.csv")
 
 def init_pinecone_index():
     print(f"正在檢查 Pinecone 中是否已經有名為 '{INDEX_NAME}' 的 Index...")
