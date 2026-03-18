@@ -38,10 +38,8 @@ except Exception as e:
 # 載入車站里程資料 (用於計算計程車資)
 STATION_DISTANCES = {}
 try:
-    # 在 D 槽執行時優先檢查本地目錄
+    # 使用 BASE_DIR 自動定位
     csv_path = os.path.join(BASE_DIR, "tra_eastern_mainline_EL_stations.csv")
-    if not os.path.exists(csv_path):
-        csv_path = r"D:\Android_Project\project115\tra_eastern_mainline_EL_stations.csv"
         
     if os.path.exists(csv_path):
         import csv
