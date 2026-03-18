@@ -536,6 +536,23 @@ def ask_ai():
                     structured_data["emergency"] = "強震警報：請注意掉落物並配合站務人員視導軌道。"
             else:
                 structured_data["emergency"] = ""
+        # --- 後端強制注入機制 ---
+        # 1. 版本標籤 (用於確認部署同步)
+        structured_data["summary"] = f"[v5] {structured_data.get('summary', '')}"
+        
+        # 2. 計程車資補強
+        if fare_note and "routes" in structured_data:
+            for r in structured_data["routes"]:
+                # 判定是否為計程車項目
+                if r.get("type") == "other" and "計程車" in r.get("title", ""):
+                    # 如果 AI 沒寫車資，強制把第一筆或摘要塞進 duration
+                    f_lines = fare_note.split("\n")
+                    if "元" not in str(r.get("duration", "")) and "元" not in str(r.get("departure", "")):
+                        r["duration"] = f_lines[0] # 取第一筆最鄰近站或轉運站
+                    # 同時把完整資訊加入到一個隱含的 note 欄位 (如果前端有支援的話) 或直接加在 title
+                    if "元" not in r.get("title", ""):
+                        r["title"] = f"{r.get('title')} (車資見下方)"
+        
         structured_data["sources"] = sources_summary
 
         return jsonify({
