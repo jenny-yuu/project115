@@ -1,0 +1,126 @@
+{
+  "Total": 64,
+  "TransfersCount": 20,
+  "Results": [
+    {
+      "StationName": "臺東",
+      "StationID": 6000,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "東竹",
+      "StationID": 6090,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "玉里",
+      "StationID": 6110,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "花蓮",
+      "StationID": 7000,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "南澳",
+      "StationID": 7090,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "東澳",
+      "StationID": 7100,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "蘇澳新",
+      "StationID": 7130,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "二結",
+      "StationID": 7180,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "宜蘭",
+      "StationID": 7190,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "礁溪",
+      "StationID": 7210,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "頂埔",
+      "StationID": 7220,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "頭城",
+      "StationID": 7230,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "外澳",
+      "StationID": 7240,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "大溪",
+      "StationID": 7260,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "石城",
+      "StationID": 7280,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "雙溪",
+      "StationID": 7310,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "猴硐",
+      "StationID": 7350,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "瑞芳",
+      "StationID": 7360,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "暖暖",
+      "StationID": 7390,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    },
+    {
+      "StationName": "八堵",
+      "StationID": 920,
+      "ExternalCount": 0,
+      "InternalCount": 0
+    }
+  ]
+}

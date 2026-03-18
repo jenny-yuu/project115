@@ -1,0 +1,690 @@
+{
+  "920": {
+    "station_id": 920,
+    "station_name": "車站與周邊資訊",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6000": {
+    "station_id": 6000,
+    "station_name": "6000 臺東",
+    "transfers": {
+      "taxi": [
+        "計程車: 地址 : 95058 臺東縣 臺東市 岩灣路 101 巷 598 號 地圖 | 臺東車站計程車候車處 (出口右前方 80 公尺)"
+      ],
+      "bus": [
+        "市內公車: 地址 : 95058 臺東縣 臺東市 岩灣路 101 巷 598 號 地圖 | 臺東縣公車 臺東火車站 (車站出口右前方 90 公尺)"
+      ],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6010": {
+    "station_id": 6010,
+    "station_name": "6010 山里",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6020": {
+    "station_id": 6020,
+    "station_name": "6020 鹿野",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6030": {
+    "station_id": 6030,
+    "station_name": "6030 瑞源",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6040": {
+    "station_id": 6040,
+    "station_name": "6040 瑞和",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6050": {
+    "station_id": 6050,
+    "station_name": "6050 關山",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6060": {
+    "station_id": 6060,
+    "station_name": "6060 海端",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6070": {
+    "station_id": 6070,
+    "station_name": "6070 池上",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6080": {
+    "station_id": 6080,
+    "station_name": "6080 富里",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6090": {
+    "station_id": 6090,
+    "station_name": "6090 東竹",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6100": {
+    "station_id": 6100,
+    "station_name": "6100 東里",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6110": {
+    "station_id": 6110,
+    "station_name": "6110 玉里",
+    "transfers": {
+      "taxi": [
+        "計程車: 地址 : 98143 花蓮縣 玉里鎮 康樂街 39 號 地圖 | 玉里車站計程車候車處 (車站出口左前方 5 公尺)"
+      ],
+      "bus": [
+        "市內公車: 地址 : 98143 花蓮縣 玉里鎮 大同路 222 號 地圖 | 花蓮客運 玉里站"
+      ],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6120": {
+    "station_id": 6120,
+    "station_name": "6120 三民",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6130": {
+    "station_id": 6130,
+    "station_name": "6130 瑞穗",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6140": {
+    "station_id": 6140,
+    "station_name": "6140 富源",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6150": {
+    "station_id": 6150,
+    "station_name": "6150 大富",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6160": {
+    "station_id": 6160,
+    "station_name": "6160 光復",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6170": {
+    "station_id": 6170,
+    "station_name": "6170 萬榮",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6180": {
+    "station_id": 6180,
+    "station_name": "6180 鳳林",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6190": {
+    "station_id": 6190,
+    "station_name": "6190 南平",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6200": {
+    "station_id": 6200,
+    "station_name": "6200 林榮新光",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6210": {
+    "station_id": 6210,
+    "station_name": "6210 豐田",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6220": {
+    "station_id": 6220,
+    "station_name": "6220 壽豐",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6230": {
+    "station_id": 6230,
+    "station_name": "6230 平和",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6240": {
+    "station_id": 6240,
+    "station_name": "6240 志學",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "6250": {
+    "station_id": 6250,
+    "station_name": "6250 吉安",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7000": {
+    "station_id": 7000,
+    "station_name": "7000 花蓮",
+    "transfers": {
+      "taxi": [
+        "計程車: 地址 : 97055 花蓮縣 花蓮市 國聯一路 100 號 地圖 | 花蓮車站計程車候車處 (東出口行李房前 5 公尺)"
+      ],
+      "bus": [
+        "市內公車: 地址 : 97055 花蓮縣 花蓮市 國聯一路98號 地圖 | 花蓮轉運站 (花蓮火車站東出口左前方 100公尺)"
+      ],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7010": {
+    "station_id": 7010,
+    "station_name": "7010 北埔",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7020": {
+    "station_id": 7020,
+    "station_name": "7020 景美",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7030": {
+    "station_id": 7030,
+    "station_name": "7030 新城",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7040": {
+    "station_id": 7040,
+    "station_name": "7040 崇德",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7050": {
+    "station_id": 7050,
+    "station_name": "7050 和仁",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7060": {
+    "station_id": 7060,
+    "station_name": "7060 和平",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7070": {
+    "station_id": 7070,
+    "station_name": "7070 漢本",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7080": {
+    "station_id": 7080,
+    "station_name": "7080 武塔",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7090": {
+    "station_id": 7090,
+    "station_name": "7090 南澳",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7100": {
+    "station_id": 7100,
+    "station_name": "7100 東澳",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7110": {
+    "station_id": 7110,
+    "station_name": "7110 永樂",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7130": {
+    "station_id": 7130,
+    "station_name": "7130 蘇澳新",
+    "transfers": {
+      "taxi": [
+        "計程車: 地址 : 27048 宜蘭縣 蘇澳鎮 中山路二段 238 號 地圖 | 蘇澳新車站前站廣場計程車候車處"
+      ],
+      "bus": [
+        "市內公車: 地址 : 27048 宜蘭縣 蘇澳鎮 中山路二段 238 之 1 號 地圖 | (一)往武荖坑、羅東、宜蘭及頭城方向:於前站一樓出站後，往右步行約10公尺，與車站同側之公車亭。(二)往蘇澳、南方澳方向:前站一樓出站後，至對側馬路，往左步行約300公尺。"
+      ],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7140": {
+    "station_id": 7140,
+    "station_name": "車站與周邊資訊",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7150": {
+    "station_id": 7150,
+    "station_name": "7150 冬山",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7160": {
+    "station_id": 7160,
+    "station_name": "7160 羅東",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7170": {
+    "station_id": 7170,
+    "station_name": "7170 中里",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7180": {
+    "station_id": 7180,
+    "station_name": "7180 二結",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7190": {
+    "station_id": 7190,
+    "station_name": "7190 宜蘭",
+    "transfers": {
+      "taxi": [
+        "計程車: 地址 : 26043 宜蘭縣 宜蘭市 光復路 1 號 地圖 | 宜蘭車站前站廣場計程車候車處"
+      ],
+      "bus": [
+        "市內公車: 地址 : 26043 宜蘭縣 宜蘭市 光復路 26-48 號 地圖 | 宜蘭縣公車 宜蘭車站",
+        "轉運巴士: 地址 : 26043 宜蘭縣 宜蘭市 校舍路 190 號 地圖 | 宜蘭轉運站"
+      ],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7200": {
+    "station_id": 7200,
+    "station_name": "7200 四城",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7210": {
+    "station_id": 7210,
+    "station_name": "7210 礁溪",
+    "transfers": {
+      "taxi": [],
+      "bus": [
+        "轉運巴士: 地址 : 262 宜蘭縣 礁溪鄉 公園路16號 地圖 | 礁溪轉運站 連絡電話: (03)987-1008"
+      ],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7220": {
+    "station_id": 7220,
+    "station_name": "7220 頂埔",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7230": {
+    "station_id": 7230,
+    "station_name": "7230 頭城",
+    "transfers": {
+      "taxi": [
+        "計程車: 地址 : 261 宜蘭縣 頭城鎮 纘祥路59號 地圖 | 頭城車站站前廣場計程車候車處"
+      ],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7240": {
+    "station_id": 7240,
+    "station_name": "7240 外澳",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7250": {
+    "station_id": 7250,
+    "station_name": "7250 龜山",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7260": {
+    "station_id": 7260,
+    "station_name": "7260 大溪",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7270": {
+    "station_id": 7270,
+    "station_name": "7270 大里",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7280": {
+    "station_id": 7280,
+    "station_name": "7280 石城",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7290": {
+    "station_id": 7290,
+    "station_name": "7290 福隆",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7300": {
+    "station_id": 7300,
+    "station_name": "7300 貢寮",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7310": {
+    "station_id": 7310,
+    "station_name": "7310 雙溪",
+    "transfers": {
+      "taxi": [],
+      "bus": [
+        "市內公車: 地址 : 227 新北市 雙溪區 朝陽街9號 地圖 | 公車站牌位於朝陽街9號"
+      ],
+      "rail": [],
+      "bike": [
+        "公共自行車: 地址 : 227 新北市 雙溪區 朝陽街1號 地圖 | 出站右轉處"
+      ]
+    }
+  },
+  "7320": {
+    "station_id": 7320,
+    "station_name": "7320 牡丹",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7330": {
+    "station_id": 7330,
+    "station_name": "7330 三貂嶺",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7350": {
+    "station_id": 7350,
+    "station_name": "7350 猴硐",
+    "transfers": {
+      "taxi": [],
+      "bus": [
+        "市內公車: 地址 : 224 新北市 瑞芳區 柴寮路70號(站牌於一樓公廁路邊牆上) 地圖 | 新北市公車 猴硐火車站 (路線：808、F808)"
+      ],
+      "rail": [
+        "主、支線: 地址 : 224 新北市 瑞芳區 柴寮路70號 地圖 | 1、2月台：宜蘭線、平溪線、深澳線"
+      ],
+      "bike": [
+        "公共自行車: 地址 : 224 新北市 瑞芳區 柴寮路36號(旁公園路側) 地圖 | YouBike 猴硐火車站"
+      ]
+    }
+  },
+  "7360": {
+    "station_id": 7360,
+    "station_name": "7360 瑞芳",
+    "transfers": {
+      "taxi": [
+        "計程車: 地址 : 22441 新北市 瑞芳區 明燈路三段 82 號 地圖 | 瑞芳車站站前廣場計程車候車處"
+      ],
+      "bus": [
+        "轉運巴士: 地址 : 22441 新北市 瑞芳區 明燈路三段 82 號 地圖 | 國道客運 瑞芳火車站",
+        "市內公車: 地址 : 22443 新北市 瑞芳區 明燈路三段 19 號 地圖 | 新北市公車 區民廣場"
+      ],
+      "rail": [
+        "主、支線: 地址 : 22441 新北市 瑞芳區 明燈路三段 82 號 地圖 | 3 月臺: 平溪線、深澳線"
+      ],
+      "bike": [
+        "公共自行車: 地址 : 22441 新北市 瑞芳區 民權路鐵道巷 14 號 (東側機車停車場) 地圖 | YouBike 瑞芳火車站"
+      ]
+    }
+  },
+  "7380": {
+    "station_id": 7380,
+    "station_name": "7380 四腳亭",
+    "transfers": {
+      "taxi": [],
+      "bus": [],
+      "rail": [],
+      "bike": []
+    }
+  },
+  "7390": {
+    "station_id": 7390,
+    "station_name": "7390 暖暖",
+    "transfers": {
+      "taxi": [],
+      "bus": [
+        "市內公車: 地址 : 205 基隆市 暖暖區 205基隆市暖暖區暖暖街51號 地圖 | 無障礙坡道入口即有公車站，站名：暖暖車站"
+      ],
+      "rail": [
+        "主、支線: 地址 : 205 基隆市 暖暖區 暖暖街51號 地圖 | 第一月台：瑞芳、宜蘭 \\第二月台：往台北、基隆"
+      ],
+      "bike": []
+    }
+  }
+}

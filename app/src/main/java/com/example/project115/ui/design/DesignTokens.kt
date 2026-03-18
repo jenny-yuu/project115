@@ -22,6 +22,7 @@ object DT {
     val SuspendDot   = Color(0xFFFF6B6B)
 
     val ButtonBg     = Color(0xFF495EAD) // Dark Blue-Purple
+    val BtnBlue      = Color(0xFF495EAD) // Alias for the new design outline
     
     val RingInnerRed = Color(0xFFFFEAEA)
     val RingInnerYellow = Color(0xFFFFF7E6)

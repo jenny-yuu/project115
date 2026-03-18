@@ -13,6 +13,7 @@ data class WeatherInfo(
     val wind_speed: Double = 0.0,
     val peak_gust_speed: Double = 0.0,
     val temperature: Double = 0.0,
+    val temp_feel: String = "舒適",
     val risk_level: String = "Normal",
     val description: String = "多雲",
     val updated_at: String = ""
@@ -30,10 +31,27 @@ data class LiveDelayTrain(
     val DelayTime: Int = 0
 )
 
+data class TransfersInfo(
+    val external: List<String> = emptyList(),
+    val internal: List<String> = emptyList()
+)
+
+data class OfficialTransfersInfo(
+    val status: String = "No Data",
+    val data: Map<String, List<String>> = emptyMap()
+)
+
+data class EarthquakeInfo(
+    val intensity: Int = 0,
+    val origin_time: String = "",
+    val dist_km: Double = 0.0
+)
+
 data class Station(
     val id: String = "",
     val StationID: String = "",
     val StationName: String = "",
+    val Route: String = "未知",
     val Sequence: Int = 0,
     val Lat: Double = 0.0,
     val Lon: Double = 0.0,
@@ -42,7 +60,10 @@ data class Station(
     val health_light: String = "正常",
     val weather: WeatherInfo = WeatherInfo(),
     val forecast: ForecastInfo = ForecastInfo(),
-    val live_delay_trains: List<LiveDelayTrain> = emptyList()
+    val live_delay_trains: List<LiveDelayTrain> = emptyList(),
+    val transfers: TransfersInfo = TransfersInfo(),
+    val official_transfers: OfficialTransfersInfo = OfficialTransfersInfo(),
+    val earthquake: EarthquakeInfo = EarthquakeInfo()
 )
 
 class StationRepository {
@@ -78,6 +99,7 @@ class StationRepository {
                                 wind_speed = (weatherMap["wind_speed"] as? Number)?.toDouble() ?: 0.0,
                                 peak_gust_speed = (weatherMap["peak_gust_speed"] as? Number)?.toDouble() ?: 0.0,
                                 temperature = (weatherMap["temperature"] as? Number)?.toDouble() ?: 0.0,
+                                temp_feel = weatherMap["temp_feel"] as? String ?: "舒適",
                                 risk_level = weatherMap["risk_level"] as? String ?: "Normal",
                                 description = weatherMap["description"] as? String ?: "多雲",
                                 updated_at = weatherMap["updated_at"] as? String ?: ""
@@ -99,10 +121,33 @@ class StationRepository {
                                 max_t = (forecastMap["max_t"] as? Number)?.toInt() ?: 25
                             )
 
+                            val transfersMap = doc.get("transfers") as? Map<String, Any> ?: emptyMap()
+                            val externalTransfers = transfersMap["external"] as? List<String> ?: emptyList()
+                            val internalTransfers = transfersMap["internal"] as? List<String> ?: emptyList()
+                            val transfersInfo = TransfersInfo(
+                                external = externalTransfers,
+                                internal = internalTransfers
+                            )
+
+                            val officialMap = doc.get("official_transfers") as? Map<String, Any> ?: emptyMap()
+                            val officialData = officialMap["data"] as? Map<String, List<String>> ?: emptyMap()
+                            val officialTransfers = OfficialTransfersInfo(
+                                status = officialMap["status"] as? String ?: "No Data",
+                                data = officialData
+                            )
+
+                            val eqMap = doc.get("earthquake") as? Map<String, Any> ?: emptyMap()
+                            val eqInfo = EarthquakeInfo(
+                                intensity = (eqMap["intensity"] as? Number)?.toInt() ?: 0,
+                                origin_time = eqMap["origin_time"] as? String ?: "",
+                                dist_km = (eqMap["dist_km"] as? Number)?.toDouble() ?: 0.0
+                            )
+
                             val station = Station(
                                 id = doc.id,
                                 StationID = doc.get("StationID")?.toString() ?: "",
                                 StationName = doc.get("StationName")?.toString() ?: "",
+                                Route = doc.get("Route")?.toString() ?: "未知",
                                 Sequence = (doc.get("Sequence") as? Number)?.toInt() ?: 0,
                                 Lat = (doc.get("Lat") as? Number)?.toDouble() ?: 0.0,
                                 Lon = (doc.get("Lon") as? Number)?.toDouble() ?: 0.0,
@@ -111,7 +156,10 @@ class StationRepository {
                                 health_light = doc.get("health_light")?.toString() ?: "正常",
                                 weather = weatherInfo,
                                 forecast = forecastInfo,
-                                live_delay_trains = trains
+                                live_delay_trains = trains,
+                                transfers = transfersInfo,
+                                official_transfers = officialTransfers,
+                                earthquake = eqInfo
                             )
                             list.add(station)
                         } catch (ex: Exception) {

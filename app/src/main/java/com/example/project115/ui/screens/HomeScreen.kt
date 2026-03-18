@@ -28,21 +28,7 @@ import androidx.compose.foundation.verticalScroll
 import com.example.project115.ui.design.DT
 import com.example.project115.ui.design.StatusTag
 
-// 台鐵東部幹線的車站分類對照表
-private fun getLineName(rawStationName: String): String {
-    val cleanName = rawStationName.trim().replace("台", "臺").replace(" ", "")
-    
-    val yilanStations = setOf("八堵", "暖暖", "四腳亭", "瑞芳", "猴硐", "三貂嶺", "牡丹", "雙溪", "貢寮", "福隆", "石城", "大里", "大溪", "龜山", "外澳", "頭城", "頂埔", "礁溪", "四城", "宜蘭", "二結", "中里", "羅東", "冬山", "新馬", "蘇澳新", "蘇澳")
-    val northLinkStations = setOf("永樂", "東澳", "南澳", "武塔", "漢本", "和平", "和仁", "崇德", "新城", "景美", "北埔", "花蓮")
-    val taitungStations = setOf("吉安", "志學", "平和", "壽豐", "豐田", "林榮新光", "南平", "鳳林", "萬榮", "光復", "大富", "富源", "瑞穗", "三民", "玉里", "東里", "東竹", "富里", "池上", "海端", "關山", "瑞和", "瑞源", "鹿野", "山里", "臺東", "康樂", "知本")
-    
-    return when {
-        yilanStations.any { cleanName.contains(it) } -> "宜蘭線"
-        northLinkStations.any { cleanName.contains(it) } -> "北迴線"
-        taitungStations.any { cleanName.contains(it) } -> "台東線"
-        else -> "其他路線"
-    }
-}
+
 
 @Composable
 fun HomeScreen(
@@ -50,7 +36,7 @@ fun HomeScreen(
     onOpenSettings: () -> Unit,
     onOpenStation: (stationName: String, lineName: String, health: String, delayMin: Int) -> Unit,
 ) {
-    var selectedLine by remember { mutableStateOf("台東線") }
+    var selectedLine by remember { mutableStateOf("臺東線") }
 
     // 觀測 Firebase 資料流
     val stations by viewModel.stations.collectAsStateWithLifecycle()
@@ -63,12 +49,12 @@ fun HomeScreen(
 
     // 將異常車站依路線分群
     val groupedAbnormal = remember(abnormalStations) {
-        // 利用真正的車站名稱去找出他所屬的鐵路總線
-        abnormalStations.groupBy { getLineName(it.StationName) }
+        // 利用 Firebase 下載回來的路線屬性去找出他所屬的鐵路總線
+        abnormalStations.groupBy { it.Route }
     }
 
     // 因為範例 UI 寫死了三條線，我們這邊依舊保留這三條線的架構
-    val uiLines = listOf("北迴線", "宜蘭線", "台東線")
+    val uiLines = listOf("北迴線", "宜蘭線", "臺東線")
 
     Column(
         modifier = Modifier
