@@ -105,70 +105,6 @@ def get_tdx_token():
         return None
 
 
-# 💡 教授建議：主要站點到「市區或轉運站」的參考座標
-CITY_CENTERS = {
-    "花蓮": {"lat": 23.978, "lon": 121.611, "name": "花蓮市區(東大門)"},
-    "臺東": {"lat": 22.756, "lon": 121.144, "name": "臺東市區(鐵花村)"},
-    "宜蘭": {"lat": 24.757, "lon": 121.753, "name": "宜蘭市區"},
-    "羅東": {"lat": 24.677, "lon": 121.767, "name": "羅東市區/轉運站"},
-    "玉里": {"lat": 23.333, "lon": 121.314, "name": "玉里鎮中心"},
-    "瑞穗": {"lat": 23.497, "lon": 121.376, "name": "瑞穗市區"}
-}
-
-def haversine_km(lat1, lon1, lat2, lon2):
-    """計算兩點距離 (公里)"""
-    import math
-    R = 6371.0
-    phi1, phi2 = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dlmb = math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlmb / 2) ** 2
-    return 2 * R * math.asin(math.sqrt(a))
-
-def get_shuttle_metrics(station_name: str):
-    """計算從車站到市區的距離與預估接駁費用 (依照教授建議)"""
-    # 尋找最近的市區/中心點
-    target = None
-    for key, val in CITY_CENTERS.items():
-        if key in station_name:
-            target = val
-            break
-    
-    if not target:
-        # 如果沒在名單內，預設一個「附近市中心」距離 2.0km 做估算
-        dist = 2.0
-        target_name = "火車站附近市中心"
-    else:
-        # 這裡需要車站的真實座標。我們先從 csv 或預設值取
-        # 為了簡化邏輯，若 target 存在我們就以常見距離預設 (例如花蓮站到市區約 3km, 台東站約 5km)
-        dist_map = {"花蓮": 3.2, "臺東": 5.1, "宜蘭": 0.8, "羅東": 0.5, "玉里": 1.1, "瑞穗": 0.3}
-        dist = dist_map.get(station_name[:2], 1.5)
-        target_name = target["name"]
-
-    # 1. 計程車費: 起步 $85 (1.25km), 續程 $25/km
-    taxi_fare = 85 + max(0, int((dist - 1.25) * 25))
-    
-    # 2. 步行時間: 1km 約 15 分鐘
-    walk_time = int(dist * 15)
-    
-    # 3. 智慧門檻判斷
-    # U-bike: 距離超過 1km 且步行超過 3 分鐘(到站點)不建議
-    # 這裡我們簡化為：如果 dist <= 1km 且為市區，建議 U-bike
-    show_ubike = dist <= 1.2
-    
-    # 公車: 步行至公車站建議 < 15 分鐘 (這裡假設车站本身就有公車)
-    show_bus = True 
-
-    return {
-        "distance": round(dist, 1),
-        "target": target_name,
-        "taxi_fare": taxi_fare,
-        "walk_time": walk_time,
-        "show_ubike": show_ubike,
-        "show_bus": show_bus
-    }
-
-
 
 def get_nearby_bus_schedules(station_name: str, token: str) -> list:
     """使用空間過濾 (Nearby) 查詢車站附近的公車預估到站時間 (ETA)"""
@@ -471,19 +407,12 @@ def ask_ai():
                 official_transfer_text = get_official_transfers(station_name, None)
 
         # 3. 呼叫 GPT
-        shuttle_info = get_shuttle_metrics(station_name)
-        
-        # 判定是否建議南迴 (僅花蓮/台東且停駛)
-        southern_loop_advice = ""
-        if is_suspended and ("花蓮" in station_name or "臺東" in station_name or "玉里" in station_name):
-             southern_loop_advice = "【緊急替代方案：南迴繞繞一圈】建議可搭乘南迴線至高雄轉乘高鐵北上，雖需約 5-6 小時，但為確定性最高的方案。"
-
         # 判定是否為地震急件
         is_earthquake = "地震" in query or (sim_type == "地震" and sim_intensity >= 3)
         
         if is_suspended:
             situation_desc = f"模擬災害：{sim_type} (強度: {sim_intensity})" if sim_type else "列車停駛（紅燈警示）"
-            advice_focus = f"目前的狀況是 {situation_desc}。重點推薦替代交通工具（客運或計程車），並參照下方費用估算。"
+            advice_focus = f"目前的狀況是 {situation_desc}。重點推薦替代交通工具（客運或計程車），並參照官方轉乘資訊。"
         else:
             situation_desc = f"列車延誤 {delay_time} 分鐘" if delay_time > 0 else "目前正常行駛"
             advice_focus = "目前營運正常，但請依據底下官方轉乘資訊或網頁搜尋結果，推薦轉乘方案。"
@@ -491,31 +420,28 @@ def ask_ai():
                 advice_focus += " 注意：雖然尚未停駛，但因有地震紀錄，請提醒乘客注意安全與巡軌可能的延誤。"
 
         prompt = f"""
-你現在是「台鐵智慧防災行程助理」。
-當前處境：『{query}』(車站：{station_name})
-營運狀態：{situation_desc}
+你現在是「台鐵智慧行程助理」。目前的狀況是：「{query}」。
+{advice_focus}
 
-【轉乘建議優化規則】：
-1. 保持「ai_advice」精簡（40字內）。
-2. 「routes」清單應具備彈性：
-   - 僅在適合時提供計程車估價（type="taxi"）。
-   - 僅在車站距離市區近時推薦 U-bike（type="u-bike"）。
-   - 若整體運行正常，則只需提供一般大眾運輸建議。
-3. 遇到強災（地震震度4+）時，在「ai_advice」開頭加入『安全警告』並填寫「emergency」。
-
-【數據參考】：
-- 計程車費估計：NT$ {shuttle_info['taxi_fare']}
-- 步行/U-bike門檻：{shuttle_info['distance']}km ({'適合' if shuttle_info['show_ubike'] else '不建議'}騎乘)
-
-【專家知識與歷史 RAG】：
+【參考歷史資料（RAG）】：
 {context_block}
 
-【輸出格式要求 (JSON)】：
-1. "summary": 12字內狀態描述。
-2. "ai_advice": 簡短的安全提醒或營運概況（嚴禁冗長）。
-3. "routes": 包含 (計程車、公車、大眾運輸、U-bike) 的結構化列表。
-4. "emergency": 嚴重災情警示。
-5. "nav_dest": 導航關鍵字。
+【目前可搭乘的客運即時班次】：
+{bus_text if bus_text else "無具體班次時間"}
+
+【TDX 台鐵官方轉乘資訊】：
+{official_transfer_text if official_transfer_text else "無官方轉乘資料"}
+
+【網路即時搜尋替代路線建議】：
+{search_text if search_text else "無"}
+
+【輸出格式要求】：
+請「務必」以 JSON 格式回答，包含以下欄位：
+1. "summary": 15字以內的簡短狀況總結。
+2. "ai_advice": 給乘客的詳細安全提醒（80字以內），若有地震請包含避難指引，必須具有同理心。
+3. "routes": 列表，包含 3~5 個建議項目（type: train/bus/other, title, departure, duration, priority: 急件/建議）。
+4. "emergency": 嚴重警示文字，僅在地震或天災嚴重時填寫。
+5. "nav_dest": 建議導航的目的地關鍵字（必須包含「台灣」與「縣市」，且優先使用官方標註的地址）。
 """
 
         print("4. 呼叫 GPT-4o-mini...")
@@ -529,43 +455,15 @@ def ask_ai():
         )
         raw_json = response.choices[0].message.content
         structured_data = json.loads(raw_json)
+            
+        if not is_suspended:
+            # 即使沒停駛，如果有強震也強行加入 emergency 警告
+            if sim_intensity >= 4 or "震度 4" in query or "震度 5" in query:
+                if not structured_data.get("emergency"):
+                    structured_data["emergency"] = "強震警報：請注意掉落物並配合站務人員視導軌道。"
+            else:
+                structured_data["emergency"] = ""
         structured_data["sources"] = sources_summary
-
-        # --- 【絕對修復：強制注入計程車與 U-bike 資訊】 ---
-        # 確保 type 正確且包含教授要求的估價與距離
-        routes = structured_data.get("routes", [])
-        
-        # 1. 注入計程車資訊 (目的地設為最近車站/轉運站)
-        taxi_exists = any(r.get("type") == "taxi" for r in routes)
-        if not taxi_exists:
-            routes.append({
-                "type": "taxi",
-                "title": f"計程車 (至{shuttle_info['target']})",
-                "departure": f"距離約 {shuttle_info['distance']}km",
-                "duration": f"預估車資 NT$ {shuttle_info['taxi_fare']}",
-                "priority": "建議"
-            })
-        else:
-            # 修復既有計程車項目的格式
-            for r in routes:
-                if r.get("type") == "taxi":
-                    r["title"] = f"計程車 (至{shuttle_info['target']})"
-                    r["departure"] = f"距離約 {shuttle_info['distance']}km"
-                    r["duration"] = f"預估車資 NT$ {shuttle_info['taxi_fare']}"
-
-        # 2. 注入 U-bike 資訊 (僅在距離適合時)
-        if shuttle_info['show_ubike']:
-            bike_exists = any(r.get("type") in ["u-bike", "bike"] for r in routes)
-            if not bike_exists:
-                routes.append({
-                    "type": "u-bike",
-                    "title": "公共自行車 (U-bike)",
-                    "departure": "站前設有站點",
-                    "duration": "距離市區近，建議騎乘",
-                    "priority": "建議"
-                })
-        
-        structured_data["routes"] = routes[:5] # 保持上限
 
         return jsonify({
             "structured": structured_data,

@@ -1,0 +1,484 @@
+檢索增強生成大型語言模型應用於：
+台鐵東部幹線車站災害營運影響推估與應變指引App
+
+摘要
+臺灣東部地區地形狹長且地質敏感，聯外交通因缺乏替代性而高度倚賴台鐵東部幹線。近年頻繁受地震、颱風與豪雨影響，導致列車誤點與停駛事件屢見不鮮。現有交通與災害資訊高度分散，台鐵官方雖提供列車動態，但缺乏環境背景；氣象與地震資訊雖可由中央氣象署取得，卻難以直接對應至特定車站。災害發生當下，旅客需在多平台間反覆比對，才能夠了解整體情況，難以針對單一地點迅速形成完整的風險判斷與應變行動。
+
+因此本計畫旨在開發以「東部幹線車站」使用者為核心視角的整合型 App，整合列車營運、災害監測與決策支援資訊，主要功能：
+車站營運與環境整合監測：以單一車站為核心，即時整合列車誤點、停駛狀態及周邊氣候資訊，並以燈號方式呈現車站營運健康度。 
+即時災害示警：針對車站所在地震度與豪雨警戒提供即時示警。
+災害衝擊與停駛回復時間推估：
+建構結合大型語言模型（Large Language Model, LLM）與檢索增強生成（Retrieval-Augmented Generation, RAG）之推論引擎，透過歷史營運案例建立向量檢索機制，比對即時災害監測資料與歷史情境，以相似度檢索推估營運影響程度與列車停駛預期營運回復時間區間，作為行程調整之時間參考依據。
+情境式應變建議與主動推播：
+整合交通部運輸資料流通服務平臺（Transport Data eXchange, TDX） [1]、中央氣象署 [2] 與地震測報中心 [3] 等多源異質資料。當系統偵測到使用者關注的車站或路段具停駛風險時，主動推播警示通知，並驅動LLM-RAG引擎綜整相關資訊，提供具體替代行程規劃與應變建議。
+
+關鍵詞：台鐵東部幹線、災害復原預測、情境式應變建議、檢索增強生成、大型語言模型
+
+研究動機與研究問題
+研究動機：
+東部交通高度依賴鐵路系統：
+臺灣東部廊帶（臺北—宜蘭—花蓮—臺東）受限狹長地形與地理阻隔，對外交通聯繫高度依賴「台鐵東部幹線」。據 2023年統計，東部幹線年運量逾 820萬人次，約為民航運量的 34倍 [4]，顯示其於通勤、就學與觀光層面的不可取代性。然而，花東航線班次有限且成本高昂，長途客運的運能不足，蘇花公路亦常因地形風險而封閉，使東部在台鐵營運中斷時，極易陷入「交通孤島」困境。
+複合型災害頻仍，營運不確定性升高：
+近年氣候變遷與地質活動加劇東部交通系統之不確定性。以 2025 年為例，東部地區多次因短時強降雨引發土石流與堰塞湖溢流（如花蓮馬太鞍溪流域），造成鐵路設施受損停駛兩日 [5]；同年亦受鳳凰颱風 [6] 影響，強風豪雨導致部分區段預防性停駛或班次調整。此外，花蓮地區12月發生中規模地震後，台鐵依規定進行路線安全檢查與限速，進而造成列車延誤 [7]。人為意外亦可能干擾列車營運，使東部交通逐漸由單一災害事件，轉變為高頻率發生的「複合型災害」。
+即時資訊分散，缺乏以「車站」為核心的風險整合視角：
+對鐵路使用者而言，當地震、颱風或豪雨等災害導致鐵路營運中斷時，最大困境在於資訊分散且難以直接轉化為行動判斷。災害發生當下，旅客需分別查詢列車動態、氣象資訊與災害警戒，各平台資訊尺度不一，缺乏以「特定車站」為單位的整合呈現。此外現有系統多僅提供事實性數據，未能回應旅客最關心的問題，例如是否應改道或需等待的時間，使用者在高壓情境下難以迅速做出決策。
+因此，本計畫聚焦營運風險高且交通替代性不足之台鐵東部幹線車站，整合歷史災害經驗與即時監測資料，建構以單一站點為核心的風險提示機制，以回應資訊分散問題，並提升旅客於災害情境下的即時決策能力。
+研究問題：
+本計畫擬探討問題如下：
+異質資料的語義轉化與規則建立：如何針對不同空間尺度、型態與來源之原始數據，建立具體的「語義映射規則」，將其轉化為一致的結構化特徵，作為後續相似度計算與模型推論之基礎。
+歷史案例的向量化建模與檢索邏輯：如何將前述經語義轉化後的結構化特徵，利用嵌入模型映射至高維度向量空間，並確立即時監測數據與歷史案例間的「相似度比對邏輯」，以精確檢索具參考價值的過往案例。
+災害復原預測的生成與決策支援：結合檢索所得之歷史案例與即時監測數據，透過受限生成策略與提示工程，引導LLM產出具備實證基礎的「營運回復時間區間」與應變建議。
+繁體中文與在地化模型之適用性探討：考量台鐵營運規章與專有名詞之特殊性，探討針對繁體中文優化之模型，相較於通用模型在理解台灣在地用語與生成決策建議上，是否具備更佳的效能與準確性。
+
+文獻回顧與探討
+本節首先回顧現有交通與災害資訊平台設計導向與功能差異，其次探討多源異質資料整合（ETL）[8, 32] 與RAG [9]技術於災害決策支援應用適切性。
+
+3-1現有交通與災害資訊平台比較與分析
+目前國內相關平台已能即時提供列車營運狀態、氣象監測與災害警示資訊，惟其設計導向與資訊整合深度仍有所差異。多數平台以單一服務目標為核心，較少從使用者於災害情境下的整體決策需求進行整合設計。
+表一比較台鐵官方 [10]、中央氣象署、Google Maps [11]與本計畫App主要功能，並以「查詢單一交通節點時可獲得資訊完整性與決策支援程度」為分析重點。
+表一、現有交通防災資訊平台功能比較表
+項目
+台鐵官網
+台鐵e訂通
+中央氣象署
+Google Maps
+本計畫App
+設計導向
+旅運服務
+旅運服務
+氣象監測
+路徑規劃
+災害決策
+服務內容
+訂票
+旅運服務
+訂票
+時刻查詢
+天氣預報
+地震速報
+導航
+轉乘規劃
+風險評估
+回復時間推估
+情境式應變建議
+停駛誤點
+V
+頁面分散路線視角
+V
+頁面分散
+路線視角
+X
+
+V
+
+V
+頁面整合
+車站視角
+環境監測
+V
+日常導向
+X
+
+V
+縣市測站
+X
+
+V
+預報災害
+呈現方式
+文字公告
+文字公告
+－
+－
+視覺化燈號
+災害示警
+X
+X
+V
+X
+V
+資訊整合
+多源但分散
+單一來源
+單一來源
+圖層疊加
+多源且集中
+回復推估
+X
+X
+X
+X
+V（RAG推論）
+應變建議
+X
+X
+X
+X
+V（LLM生成）
+
+綜合表一，發現現有服務多採用單一資料來源：台鐵側重營運，缺乏環境脈絡；氣象署提供監測數據，但未連結交通影響；導航軟體缺乏應變指引。
+因此本計畫推出的App更為強調以「單一車站」為核心整合單位，透過視覺化燈號與預期回復時間區間，將分散的即時資訊轉化為具行動導向之風險提示，以強化使用者於災害情境下的即時決策支援能力。
+
+3-2關鍵技術探討
+計畫核心兩大面向「多源異質資料整合」與「大型語言模型輔助決策」。
+前者解決資料來源分散、尺度不一致與即時性差異問題；後者則嘗試將複雜的即時災害與營運資訊，建立規則轉化為具決策意義的風險與時間預期指引。
+3-2-1多源異質資料整合
+ETL資料整合流程
+資料整合（Data Integration）是將不同來源數據轉化為決策資訊的基礎。本計畫透過 ETL（Extract Transform Load, ETL）流程，針對交通部 TDX（列車即時動態）、中央氣象署（雨量、震度觀測）以及歷史災害營運紀錄資料進行自動化介接與清洗，其概念流程如圖一所示。
+
+圖一、ETL（Extract, Transform, Load）流程
+ETL 流程包含三個主要階段：
+萃取（Extract）：自 TDX API 與氣象開放平台擷取原始 JSON資料。
+轉換（Transform）：統一時間格式與座標系統，並處理空間尺度差異。
+載入（Load）：結構化數據存入本地資料庫，以利後續 RAG 檢索。
+
+地理空間映射（Geospatial Mapping）
+地理空間映射為本計畫關鍵技術之一。透過將具空間屬性資料（如雨量、地震測站）依座標距離，精確映射至「特定車站」地理基準，解決不同資料在空間尺度上無法對齊的問題，確保系統貼近該站點周邊真實災害情境。[12]
+
+3-2-2 大型語言模型（LLM）與檢索增強生成（RAG）
+大型語言模型（LLM）
+大型語言模型（Large Language Model, LLM）本質為基於機率的生成模型，具備語意理解與自然語言生成能力，能進行「語意對語意（Semantic-to-Semantic）」的轉換與推論。透過大量文本資料訓練，模型能理解輸入文字的上下文脈絡，並預測最合理的後續文本序列。
+依照取得方式，LLM 可概略分為「開放式」與「封閉式」兩類。開放式模型如 Hugging Face [13] 平台所提供之 LLaMA [14]，具備可自行部署、客製化調整與模型權重透明等優點，適合進行模型架構與訓練機制相關研究。近年亦出現多款強化繁體中文與台灣在地語料的開放模型，例如Taiwan-LLM [15]便是基於 LLaMA 架構所發展之在地化模型，透過持續預訓練（Continual Pre-training）方式，額外引入涵蓋台灣新聞、政府法規、公共政策與社群對話等高品質繁體中文語料，以補足通用模型於台灣語境下的語意落差，使其能更精確處理繁體中文語意結構、在地用語與公共運輸相關文本；後者如 OpenAI [16] 所提供之 GPT 系列模型 [17]，雖無法存取其內部權重，但於語意理解與生成品質上表現成熟，較適合應用導向與系統整合之研究情境。
+
+檢索增強生成（RAG）
+無論採用何種模型，若僅依賴模型內部之通用知識進行生成，仍可能受限訓練資料截止時間，或因缺乏特定領域知識產生事實幻覺（Hallucination），導致不可靠的推論結果 [18]。因此本計畫不採用純生成模式，而是結合檢索增強生成（RAG）技術，其核心關鍵在於「專用領域知識庫的建立」。先將台鐵歷史災害事件（震度、雨量）與對應的營運處置紀錄，透過嵌入模型（Embedding Model）轉化為高維度向量，建置專屬向量資料庫。即時災害發生時，系統運作流程如下：
+檢索（Retrieval）： 將當下災害數據轉為向量，在資料庫中計算資料相似度，檢索出過往最相似的歷史案例。
+增強（Augmentation）：檢索到歷史事實作提示詞（Prompt）背景知識。
+生成（Generation）：限制 LLM 僅能依據上述檢索到的事實進行語意重組與推論，生成具備實證基礎的決策建議。
+
+3-2-3 RAG 效能優化技術探討
+混合檢索機制（Hybrid Search）：結合語意檢索與關鍵字檢索
+單純的語意檢索（向量檢索）機制 [19] 雖可捕捉語意相似度，惟在面對專有名詞或規章關鍵字時，因對字面差異不夠敏感，進而影響檢索精確度。因此，成熟的 RAG 架構多採用混合檢索機制，結合關鍵字檢索（如 BM25）[20, 33, 34] 與語意檢索（Semantic Search），兼顧關鍵詞匹配與上下文語意理解，提升候選案例檢索的完整性與可靠性。確保抓到精確名詞同時也能理解上下文語境。
+
+生成策略探討：受限生成與引導生成
+受限生成（Constrained Generation）強制模型遵循特定輸出格式（如 JSON），確保生成內容具備結構化與規範性，適用產出如「回復時間區間」等需高度一致性且具可解釋性之結果。而引導生成（Guided Generation）[21] 則是透過提示工程（Prompt Engineering）[22] 或上下文脈絡，引導模型聚焦於計畫核心「營運影響判斷」與給予使用者「行動建議」，避免生成發散或無關敘述。
+
+語意向量表示與嵌入模型（Embedding Model）應用
+隨著歷史資料庫持續累積，單純線性向量掃描（Linear Scan）已無法滿足災時即時應變需求。因此需透過嵌入模型技術 [23, 24, 35]，將非結構化文本轉為高維度語意向量 [37]。目前針對繁體中文語境優化之嵌入模型，如 BGE-M3（BAAI General Embedding）與 OpenAI 所提供之 text-embedding-3 [25] 系列模型，具備較佳語意捕捉能力，能有效處理台鐵營運規章、災害通報與歷史處置紀錄中專有名詞與長文本，降低通用模型於繁體中文情境可能產生的語意偏差。
+
+研究方法與步驟
+
+圖二、App流程圖
+4-1多源資料整合與處理方法
+4-1-1資料來源與分類
+本計畫所使用之資料依來源與用途，分為以下類別，如表二所示：
+表二、資料來源與分類
+
+資料內容
+資料來源
+即時營運資料
+列車即時延誤資訊
+交通部 TDX
+
+營運通阻與異常事件
+交通部 TDX
+
+車站即時到離站狀態
+交通部 TDX
+歷史營運結果資料
+行車事故與營運異常紀錄
+台鐵官方資料
+歷史災害條件資料
+地震歷史資料
+地震測報中心
+
+降雨歷史資料
+中央氣象署
+靜態基礎資料
+車站基本資料
+台鐵官方資料
+
+路線與車站關係
+交通部 TDX
+
+系統運作所需之原始資料，依時間尺度與應用目的可分為「即時監測與營運資料」以及「歷史與預測型資料」兩大類。前者用於即時掌握特定車站周邊之災害與營運狀態，後者則作為風險判斷與營運回復時間推估之背景知識，共同支撐以「單一車站」為核心之整合式決策支援機制。
+
+4-1-2資料處理流程ETL
+因應多源資料在格式、時間尺度與空間解析度上的差異，本計畫採用 ETL（Extract, Transform, Load）流程進行資料整合處理，核心步驟如下：
+Extract（萃取）：透過 API 定期擷取交通部 TDX、中央氣象署與相關政府資料平台之原始資料。
+Transform（轉換）：進行資料清理與標準化處理，包括統一時間格式（ISO 8601）、座標系統（WGS84）、過濾缺失值與異常數據。
+Load（載入）：將處理後結構化資料儲存至本地或雲端資料庫。
+
+4-1-3地理空間映射（Geospatial Mapping）
+以「台鐵東部幹線各車站座標」作為核心空間錨點（Spatial Anchor），透過最近鄰分析（Nearest Neighbor Analysis），將距離最近之氣象測站與地震測站資料配對至特定車站。
+
+兩點間距離計算採用 Haversine 公式 [26]，其定義如公式(1) 所示：
+
+(1)
+
+其中  為地球半徑， 兩點緯度， 兩點經度（皆以弧度表示）。
+圖三、系統推論流程圖
+4-2 LLM－RAG 模型設計：規則式語義映射與兩階段檢索
+本計畫之核心目標，是在特定車站發生災害時，以「過去類似情境」作為參考，並提供可行的行程與應變提示。因此採用結合「規則式語義映射」與「檢索增強生成（RAG）」之推論架構，以確保結果具備可解釋性。
+整體推論流程分為三個階段：
+災害資料語義化（規則映射）
+相似歷史案例檢索（向量比對）
+回復時間估計與決策提示生成（LLM 生成）
+
+4-2-1 規則式語義映射（Rule-based Semantic Mapping）
+將即時災害資料數值轉為語意文本，參考台鐵既有災害預警與停駛處置機制 [27]，將即時監測資料進行如表三、表四所示之語意映射。
+表三、災害強度語義映射規則設計
+語義強度等級（）：災害對鐵路營運之潛在影響程度。
+原始數值（地震／降雨）
+語義等級
+震度 < 3｜雨量 < 30 mm
+Normal：低影響（正常營運）
+3 ≤ 震度 < 5｜雨量30 ~ 80 mm
+Alert：中度影響（延誤）
+震度 ≥ 5｜雨量 ≥ 80 mm
+Critical：高影響（停駛）
+空間影響區（）：災害監測點相對於目標車站之距離層級。
+表四、空間影響區語義映射規則設計
+測站、車站距離
+空間區位 
+≤ 5 km
+Station（車站周邊）
+5 ~ 20 km
+Adjacent（鄰近區段）
+> 20 km
+Regional（距離較遠）
+僅營運狀態為「停駛」或重大異常時，才啟動後續回復時間推估模組。
+
+4-2-2 災害事件向量化與資料庫建置（Vectorization & Embedding）
+利用嵌入模型（Embedding Model）將規則映射後之文本序列（災害類型、強度、空間影響區）投影至高維向量空間，產生特徵向量V。
+每筆歷史或即時災害事件，皆以統一結構化特徵表示：
+
+其中  為災害類型（地震 / 豪雨）、 強度等級、 空間影響區。
+4-2-3 兩階段相似案例檢索（Two-stage Retrieval）
+系統採用兩階段機制 [28] 以確保檢索精確度：
+第一階段：語義一致案例篩選
+優先篩選災害類型與語義等級  相符的Top-N候選案例，排除情境明顯不符事件。以BM25演算法 [29, 36] 計算文字相關性，如公式(2)：
+
+(2)
+其中 為歷史案例文件，  為組成查詢字串「災害類型＋語義強度等級＋車站區段關鍵詞」。
+
+第二階段：向量相似度排序
+將即時災害轉化為查詢向量  ，與第一階段篩選出之候選歷史向量 進行餘弦相似度（Cosine Similarity）[30] 計算如公式(3)：
+
+(3)
+依相似度由高至低排序，取 Top-k案例作為推論依據。
+
+4-2-4 受限生成與推論結果產出（Constrained Generation）
+為避免LLM產生幻覺，本計畫採用受限生成策略 [31]。系統將「即時災害監測數據」與檢索所得之「Top-k 歷史案例摘要」共同組成結構化提示詞（Prompt），輸入至 LLM 進行最終的自然語言生成。
+預期輸出內容包含：
+預期營運影響程度、預期回復時間區間與行動建議與注意事項。
+
+4-3系統實作與應用設計方法－車站健康度燈號視覺化
+為提升使用者於災害情境下的理解效率，以「車站健康度燈號」視覺化機制，以簡化方式呈現特定車站之即時風險狀態。燈號判定規則如表五所示。
+
+圖四、車站健康度燈號示意圖
+表五、車站健康度燈號呈現方式與判定規則
+顏色
+狀態
+規則說明
+黃燈
+輕度異常
+列車有誤點情形，未達停駛狀態，且無重大災害警示發生。
+紅燈
+風險較高
+列車停駛，或偵測到可能影響營運之災害因子。
+（如達警戒標準之地震震度或豪雨警戒）
+4-4計畫時程：工作項目與預定進度
+表六、計畫時程表
+第一階段（7 ~ 8 月）資料建置與 APP 基礎架構
+項目/ 月份
+07
+08 
+09
+10
+11
+12
+01
+02
+權重
+蒐集停運與災害監測資料
+6%
+4%
+
+
+
+
+
+
+10%
+建車站層級資料庫與空間座標
+5%
+5%
+
+
+
+
+
+
+10%
+APP 基礎架構規劃與建置
+4%
+8%
+
+
+
+
+
+
+12%
+第二階段（9 ~ 11 月）推論模型與核心功能實作
+停駛災害語義映射規則建立
+
+
+3%
+4%
+2%
+
+
+
+9%
+歷史案例向量資料庫建構
+
+
+3%
+5%
+4%
+
+
+
+12%
+BM25＋向量相似度檢索
+
+
+3%
+4%
+5%
+
+
+
+12%
+推論結果整合至 APP 介面
+
+
+
+3%
+5%
+
+
+
+8%
+第三階段（12 ~ 2 月）APP 整合、測試與驗證
+RAG 推論與受限生成流程
+
+
+
+
+
+5%
+4%
+
+9%
+車站健康度燈號與決策提示
+
+
+
+
+
+4%
+3%
+
+7%
+不同 LLM 模型效能比對
+
+
+
+
+
+3%
+3%
+
+6%
+研究成果整理與報告撰寫
+
+
+
+
+
+2%
+3%
+7%
+12%
+每月工作進度（%）
+17%
+15%
+13%
+14%
+11%
+14%
+13%
+7%
+100%
+累積工作進度（%）
+17%
+32%
+45%
+59%
+70%
+84%
+97%
+100%
+100%
+
+預期結果
+
+圖五、預期結果（主要畫面）
+車站層級營運與環境資訊整合（主要畫面）於車站資訊頁面中，系統依停駛或延誤狀態呈現特定車站之即時營運資訊，並同步顯示相關氣象與災害監測資料，提供以單一站點為核心之風險判斷視角，並根據營運狀態與歷史案例提供應變建議。
+
+
+圖六、預期結果（首頁、環境資訊詳述、推播設定頁）
+列車營運總覽與異常車站呈現（首頁）系統可依北迴線、宜蘭線與台東線進行路線選擇，並於總覽頁面標示發生停駛或延誤之車站，使用者能快速掌握東部幹線整體營運狀況。
+個人化通勤訂閱與主動推播機制
+使用者可設定關注之通勤時段與路線，當系統偵測到相關車站發生營運異常或災害警示時，主動推播即時通知，提升使用者對突發事件之即時應變能力。
+插圖素材取自[38]。
+
+需要教授指導內容
+6-1資料處理流程與資料庫架構設計
+6-2 API 技術實作與資料串接 
+6-3主動訊息推播（Push Notification）機制
+6-4台灣在地化開放模型（Taiwan-LLM）與通用大型語言模型之效能比較
+6-5 LLM-RAG 技術實作
+6-6不同模型之運用效能及案例篩選數量探討
+參考文獻
+中華民國交通部. (2018). 基礎服務. TDX 運輸資料流通服務. https://tdx.transportdata.tw/data-service/basic 
+中央氣象署. (2026, December 1). 氣象資料開放平台 OPEN WEATHER DATA. 中央氣象署. https://opendata.cwa.gov.tw/index 
+中央氣象署. (2026, Spring 2). 中央氣象署地震測報中心. 中央氣象署. https://scweb.cwa.gov.tw/ 
+國營臺灣鐵路股份有限公司 . (2026, Spring 2). 臺鐵統計資訊. 臺鐵公司. https://www.railway.gov.tw/tra-tip-web/adr/about-public-info-3?searchType=2&se 
+余曉涵. (2025, September 24). 堰塞湖傳有溢流之虞 台鐵花東列車一度預防性停駛. 中央通訊社. https://www.cna.com.tw/news/ahel/202509240151.aspx 
+國營臺灣鐵路股份有限公司. (2025, November 12). 臺鐵公司因應鳳凰颱風列車行駛資訊 第6報. 交通部全球資訊網. https://www.motc.gov.tw/ch/app/data/view?module=news&id=14&serno=b5a4c974-ede2-4e0b-a8d8-f6e085b827cf 
+胡瑞玲. (2025, December 27). 東部海域規模7地震！台鐵礁溪至蘇澳新站暫停行駛 高鐵6班次臨時停車. 聯合新聞網. https://udn.com/news/story/124692/9229837 
+鄭銘輝. (2023, November). 資料擷取、轉換、載入系列（一）：淺談 ETL. ARES 資通電腦電子報. https://marketing.ares.com.tw/newsletter/2023-11-si/etl 
+Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., Küttler, H., Lewis, M., Yih, W., Rocktäschel, T., Riedel, S., & Kiela, D. (2020). Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. Advances in Neural Information Processing Systems, 33, 1–9. https://proceedings.neurips.cc/paper/2020/file/6b493230205f780e1bc26945df7481e5-Paper.pdf 
+國營臺灣鐵路股份有限公司. (2026, February 21). 台鐵e訂通. App Store. https://apps.apple.com/tw/app/%E5%8F%B0%E9%90%B5e%E8%A8%82%E9%80%9A/id1441617748 
+Google. (2026, February 21). Google Maps. https://www.google.com/maps  
+Woods, T. (2025, May 13). Geospatial Mapping 地理空間映射. Meline. https://publish.obsidian.md/meline/%E2%82%82+%F0%9F%92%AB+%E2%82%82++Memory+Echoes/NOD/Geospatial+Mapping+%E5%9C%B0%E7%90%86%E7%A9%BA%E9%97%B4%E6%98%A0%E5%B0%84     
+Hugging face. (2026, February 21). Hugging Face. https://huggingface.co/ 
+Touvron, H., Thibaut, L., Izacard, G., Martinet, X., lachaux, M., Lacroix, T., Rozière, B., Goyal, N., grave, E., & Lample, G. (2023). LLaMA: Open and Efficient Foundation Language Models. ArXiv. https://formacion.actuarios.org/wp-content/uploads/2024/05/2302.13971-LLama-Open-and-Efficient-Foundation-Language-Models.pdf 
+Liu, S. (2024, July 1). [Project TAME] Llama-3-Taiwan 模型：Taiwan-LLM 模型系列再更新. Medium. https://medium.com/@simon3458/project-tame-llama-3-taiwan-1b249b88ab67 
+OpenAI. (2026). OpenAI. https://www.openai.com/ 
+OpenAI. (2026). GPT Models. https://developers.openai.com/api/docs/models 
+Ji, Z., lee, N., Frieske, R., Yu, T., Su, D., Xu, Y., ishii, E., Bang, Y. jin, madotto, A., & fung, P. (2023). Survey of Hallucination in Natural Language Generation. ACM Computing Surveys, 55(2). https://doi.org/10.1145/3571730 
+Hsu, Y. (2024, July 22). Large Language Models with Semantic Search結合大型語言模型與語義搜索_課程筆記. HackMD. https://hackmd.io/@YungHuiHsu/Sk-hxS0-T 
+Dallen12151830. (2025). (RAG 2-3) 混合檢索與查詢智能化：召回率與精度的雙重保障. IThome 鐵人賽. https://ithelp.ithome.com.tw/articles/10377396 
+It古董. (2025, September 2). 【第四章：大模型（LLM)】07.Prompt工程-(6)受限生成和引導生成. CSDN. https://blog.csdn.net/IT_ORACLE/article/details/150572062 
+Alpha camp. (2023, October 2). Prompt Engineering 提示工程是什麼？新手必學指南. ALPHAcamp. https://tw.alphacamp.co/blog/prompt-engineering 
+Maiagent. (2025, November). Embedding 模型. MAIAGENT. https://docs.maiagent.ai/tech/quickstart/embedding 
+Jollen. (2025, November 14). RAG & Top-K 檢索概論 : 使用 Text Embedding. Jollen 的 Blog. https://jollen.org/blog/2025/11/rag-topk-semantic-6.html 
+Ihower. (2024, July). 使用繁體中文評測各家 Embedding 模型的檢索能力. Ihower{blogging}. https://ihower.tw/blog/12167-embedding-models 
+阿好伯. (2025, December 16). 如何用 R 語言計算周邊測站？Haversine 公式 + Leaflet 視覺化完整教學. HackMD. https://hackmd.io/@LHB-0222/rJ558E6GZl 
+林景山. (2024, November 22). 極端氣候天然災變臺鐵之預警機制及處置作為. 國家運輸安全調查委員會全球資訊網. https://www.ttsb.gov.tw/media/7882/%E5%A0%B4%E6%AC%A12-2_%E6%A5%B5%E7%AB%AF%E6%B0%A3%E5%80%99%E5%A4%A9%E7%84%B6%E7%81%BD%E8%AE%8A%E8%87%BA%E9%90%B5%E4%B9%8B%E9%A0%90%E8%AD%A6%E6%A9%9F%E5%88%B6%E5%8F%8A%E8%99%95%E7%BD%AE%E4%BD%9C%E7%82%BA_%E6%9E%97%E6%99%AF%E5%B1%B1%E8%99%95%E9%95%B7.pdf 
+Pinecone. (2026, February 21). Rerankers and Two-Stage Retrieval. https://www.pinecone.io/learn/series/rag/rerankers/ 
+Rosa, G. Moraes, Rodrigues, ruan Chaves, Lotufo, Roberto, & Nogueira, R. (2021). Yes, BM25 Is a Strong Baseline for Legal Case Retrieval. ArXiv, 1–3. https://arxiv.org/pdf/2105.05686 
+Salton, G., & McGill, M. J.  (1983). Introduction to Modern Information Retrieval. McGraw-Hill.
+Min, S., Krishna, K., Lyu, X., Lewis, M., Yih, W. T., Koh, P., ... & Hajishirzi, H. (2023, December). Factscore: Fine-Grained Atomic Evaluation of Factual Precision in Long Form Text Generation. (2023). In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing. https://doi.org/10.18653/v1/2023.emnlp-main.741 
+Kimball, R., & Caserta, J. (2004). The data warehouse ETL toolkit. John Wiley & Sons.
+Robertson, S. E., Walker, S., Jones, S., Hancock-Beaulieu, M. M., & Gatford, M. (1994). Okapi at TREC-3.
+Robertson, S., & Zaragoza, H. (2009). The probabilistic relevance framework: BM25 and beyond. Foundations and Trends in Information Retrieval, 3(4), 333–389.
+Reimers, N., & Gurevich, I. (2019). Sentence-BERT: Sentence Embeddings Using Siamese BERT-Networks. Association for Computational Linguistics, Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP). https://aclanthology.org/D19-1410.pdf
+Liu, Y., Hashimoto, K., Zhou, Y., Yavuz, S., Xiong, C., & Yu, P. (2021). Dense Hierarchical Retrieval for Open-Domain Question Answering. Association for Computational Linguistics, Findings of the Association for Computational Linguistics: EMNLP 2021, 188–200. https://aclanthology.org/2021.findings-emnlp.19/ 
+National taipei university of technology. (2024). ROCLING 2020: The 32nd Conference on Computational Linguistics and Speech Processin. ROCLING 2020: The 32nd Conference on Computational Linguistics and Speech Processin. https://aclanthology.org/2020.rocling-1.pdf 
+いらすとや. (n.d.). いらすとや－素材集. https://www.irasutoya.com/ 

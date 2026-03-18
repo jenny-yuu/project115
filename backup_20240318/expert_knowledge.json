@@ -61,19 +61,5 @@
     "description": "全區間路線及電力設施巡查。",
     "recovery_time": "1.5 ~ 2 小時",
     "source": "台鐵即時動態追蹤資料"
-  },
-  {
-    "id": "sop_general_earthquake_safety",
-    "category": "通用安全SOP-地震",
-    "situation": "地震發生當下",
-    "solution": "立即原地避難：『趴下、掩護、穩住』。遠離月台邊緣及大型廣告看板。若在車廂內，請握緊把手，嚴禁擅自跳車，靜後車上廣播指示。",
-    "source": "內政部消防署避難指引"
-  },
-  {
-    "id": "sop_general_flood_safety",
-    "category": "通用安全SOP-淹水",
-    "situation": "強降雨或淹水發生",
-    "solution": "避免進入地下人行道。若受困月台，請前往高處避難。配合站員引導進行預警性疏散，切勿強行穿越積水路段。",
-    "source": "水利署防災手冊"
   }
 ]
