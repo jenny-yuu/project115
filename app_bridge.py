@@ -208,13 +208,7 @@ def get_official_transfers(station_name: str, token: str) -> str:
     output = []
     mapping = {"taxi": "計程車", "bus": "公路運輸/公車", "rail": "軌道運輸/火車", "bike": "公共自行車"}
     sid = get_station_id(station_name)
-
-    def _build_result(out: list) -> str:
-        """統一 return 前注入計程車車資估算"""
-        fare_note = get_taxi_fare_str(station_name)
-        if fare_note:
-            out.append(f"【計程車資估算 (至鄰近站)】\n{fare_note}")
-        return "\n\n".join(out)
+    fare_note = get_taxi_fare_str(station_name)
 
     # 1. 【最強優先】Firebase Cloud 資料
     if db:
@@ -225,10 +219,13 @@ def get_official_transfers(station_name: str, token: str) -> str:
                     data = doc.to_dict().get("transfers", {})
                     for k, v in mapping.items():
                         if data.get(k):
-                            output.append(f"【{v}】\n" + "\n".join([f"- {i}" for i in data[k]]))
+                            text = f"【{v}】\n" + "\n".join([f"- {i}" for i in data[k]])
+                            if k == "taxi" and fare_note:
+                                text += f"\n- (預估車資：\n{fare_note})"
+                            output.append(text)
                     if output:
                         print(f"   [Cloud] 從 Firebase/scraped_transfers 取得 {station_name}({sid}) 資料")
-                        return _build_result(output)
+                        return "\n\n".join(output)
 
             docs = db.collection("stations").stream()
             for doc in docs:
@@ -239,10 +236,13 @@ def get_official_transfers(station_name: str, token: str) -> str:
                         data = official.get("data", {})
                         for k, v in mapping.items():
                             if data.get(k):
-                                output.append(f"【{v}】\n" + "\n".join([f"- {i}" for i in data[k]]))
+                                text = f"【{v}】\n" + "\n".join([f"- {i}" for i in data[k]])
+                                if k == "taxi" and fare_note:
+                                    text += f"\n- (預估車資：\n{fare_note})"
+                                output.append(text)
                         if output:
                             print(f"   [Cloud] 從 Firebase/stations 取得 {station_name} 資料")
-                            return _build_result(output)
+                            return "\n\n".join(output)
         except Exception as e:
             print(f"⚠️ Firebase 雲端查詢異常: {e}")
 
@@ -259,10 +259,13 @@ def get_official_transfers(station_name: str, token: str) -> str:
                     trans = target_data.get("transfers", {})
                     for k, v in mapping.items():
                         if trans.get(k):
-                            output.append(f"【{v}】\n" + "\n".join([f"- {i}" for i in trans[k]]))
+                            text = f"【{v}】\n" + "\n".join([f"- {i}" for i in trans[k]])
+                            if k == "taxi" and fare_note:
+                                text += f"\n- (預估車資：\n{fare_note})"
+                            output.append(text)
                     if output:
                         print(f"   [Local] 從 D 槽 scraped_transfers.json 取得 {station_name} 資料")
-                        return _build_result(output)
+                        return "\n\n".join(output)
     except Exception as e:
         print(f"⚠️ D 槽資料讀取異常: {e}")
 
@@ -284,15 +287,18 @@ def get_official_transfers(station_name: str, token: str) -> str:
                                 elif m_type in ["MRT", "HSR", "Train"]: cat_name = "【軌道運輸】"
                                 descs = [d.get('Description') for d in mode.get('Descriptions', []) if d.get('Description')]
                                 if descs:
-                                    output.append(f"{cat_name}\n" + "\n".join([f"- {i}" for i in descs]))
+                                    text = f"{cat_name}\n" + "\n".join([f"- {i}" for i in descs])
+                                    if cat_name == "【計程車】" and fare_note:
+                                        text += f"\n- (預估車資：\n{fare_note})"
+                                    output.append(text)
                             if output:
                                 print(f"   [Research] 從 OneDrive/StationTransfer.json 取得 {station_name} 資料")
-                                return _build_result(output)
+                                return "\n\n".join(output)
     except Exception as e:
         print(f"⚠️ OneDrive 研究資料讀取異常: {e}")
 
     if output:
-        return _build_result(output)
+        return "\n\n".join(output)
 
     return "（查無官方轉乘資料，建議查詢網路搜尋結果）"
 
