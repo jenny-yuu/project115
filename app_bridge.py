@@ -531,11 +531,10 @@ def ask_ai():
         structured_data = json.loads(raw_json)
         structured_data["sources"] = sources_summary
 
-        # --- 【絕對修復：保留所有建議並強制注入計程車資訊】 ---
-        # 1. 取得 AI 生成的所有建議
-        routes = structured_data.get("routes", [])
+        # --- 【簡化修復：保留 AI 所有建議，末尾補上計程車與 U-bike】 ---
+        ai_routes = structured_data.get("routes", [])
         
-        # 2. 定義我們要強制加入/修正的計程車項目
+        # 建立強制的計程車項目
         taxi_item = {
             "type": "taxi",
             "title": f"計程車 (至{shuttle_info['target']})",
@@ -544,30 +543,23 @@ def ask_ai():
             "priority": "建議"
         }
         
-        # 3. 檢查清單中是否已經有計程車，有的話就更新它，沒有就加在最前面
-        taxi_found = False
-        for i, r in enumerate(routes):
-            if any(k in r.get("title", "") or k in r.get("departure", "") for k in ["計程車", "taxi", "Taxi"]):
-                routes[i] = taxi_item # 直接覆蓋為正確格式
-                taxi_found = True
-                break
+        # 移除 AI 可能生成的舊格式計程車 (避免重複)
+        final_routes = [r for r in ai_routes if "計程車" not in r.get("title", "") and "taxi" not in r.get("type", "")]
         
-        if not taxi_found:
-            routes.insert(0, taxi_item) # 加在最前面
-
-        # 4. 同理處理 U-bike (如果距離近)
+        # 加入我們的標準計程車格式
+        final_routes.insert(0, taxi_item)
+        
+        # 加入 U-bike (如果近)
         if shuttle_info['show_ubike']:
-            bike_found = any(k in r.get("title", "") for r in routes for k in ["單車", "bike", "自行車", "U-bike"])
-            if not bike_found:
-                routes.append({
-                    "type": "u-bike",
-                    "title": "公共自行車 (U-bike)",
-                    "departure": "站前設有站點",
-                    "duration": "距離市區近，建議騎乘",
-                    "priority": "建議"
-                })
-
-        structured_data["routes"] = routes[:5]
+             final_routes.append({
+                 "type": "u-bike",
+                 "title": "公共自行車 (U-bike)",
+                 "departure": "站前設有站點",
+                 "duration": "距離市區近，建議騎乘",
+                 "priority": "建議"
+             })
+        
+        structured_data["routes"] = final_routes[:5]
 
         return jsonify({
             "structured": structured_data,
