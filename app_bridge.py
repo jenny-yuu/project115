@@ -531,41 +531,60 @@ def ask_ai():
         structured_data = json.loads(raw_json)
         structured_data["sources"] = sources_summary
 
-        # --- 【絕對修復：強制注入計程車與 U-bike 資訊】 ---
-        # 確保 type 正確且包含教授要求的估價與距離
+        # --- 【終極修復：強制注入計程車與 U-bike 資訊，並救援所有空白標題】 ---
         routes = structured_data.get("routes", [])
+        final_routes = []
+        taxi_added = False
         
-        # 1. 注入計程車資訊 (目的地設為最近車站/轉運站)
-        taxi_exists = any(r.get("type") == "taxi" for r in routes)
-        if not taxi_exists:
-            routes.append({
-                "type": "taxi",
-                "title": f"計程車 (至{shuttle_info['target']})",
-                "departure": f"距離約 {shuttle_info['distance']}km",
-                "duration": f"預估車資 NT$ {shuttle_info['taxi_fare']}",
-                "priority": "建議"
-            })
-        else:
-            # 修復既有計程車項目的格式
-            for r in routes:
-                if r.get("type") == "taxi":
-                    r["title"] = f"計程車 (至{shuttle_info['target']})"
-                    r["departure"] = f"距離約 {shuttle_info['distance']}km"
-                    r["duration"] = f"預估車資 NT$ {shuttle_info['taxi_fare']}"
-
-        # 2. 注入 U-bike 資訊 (僅在距離適合時)
-        if shuttle_info['show_ubike']:
-            bike_exists = any(r.get("type") in ["u-bike", "bike"] for r in routes)
-            if not bike_exists:
-                routes.append({
+        for r in routes:
+            title = r.get("title", "").strip()
+            dept = r.get("departure", "").strip()
+            
+            # 救援：如果標題是空的，就拿副標題當標題
+            if not title and dept:
+                title = dept[:12] if len(dept) > 12 else dept
+            
+            # 情境一：計程車 (偵測關鍵字)
+            if any(k in title or k in dept for k in ["計程車", "taxi", "Taxi"]):
+                final_routes.append({
+                    "type": "taxi",
+                    "title": f"計程車 (至{shuttle_info['target']})",
+                    "departure": f"距離約 {shuttle_info['distance']}km",
+                    "duration": f"預估車資 NT$ {shuttle_info['taxi_fare']}",
+                    "priority": "建議"
+                })
+                taxi_added = True
+            
+            # 情境二：單車 (偵測關鍵字)
+            elif any(k in title.lower() or k in dept.lower() for k in ["單車", "bike", "自行車", "bicycle"]):
+                final_routes.append({
                     "type": "u-bike",
                     "title": "公共自行車 (U-bike)",
                     "departure": "站前設有站點",
                     "duration": "距離市區近，建議騎乘",
                     "priority": "建議"
                 })
+            
+            # 情境三：一般交通手段 (公車、鐵路)
+            elif title:
+                r["title"] = title
+                final_routes.append(r)
+
+        # 兜底：如果 AI 漏掉計程車，強制補入
+        if not taxi_added:
+            final_routes.insert(0, {
+                "type": "taxi",
+                "title": f"計程車 (至{shuttle_info['target']})",
+                "departure": f"距離約 {shuttle_info['distance']}km",
+                "duration": f"預估車資 NT$ {shuttle_info['taxi_fare']}",
+                "priority": "建議"
+            })
         
-        structured_data["routes"] = routes[:5] # 保持上限
+        # 移除太遠的單車建議
+        if not shuttle_info['show_ubike']:
+            final_routes = [r for r in final_routes if r.get("type") not in ["u-bike", "bike", "bicycle"]]
+
+        structured_data["routes"] = final_routes[:5]
 
         return jsonify({
             "structured": structured_data,
