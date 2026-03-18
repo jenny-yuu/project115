@@ -462,14 +462,23 @@ def ask_ai():
             situation_desc = f"模擬災害：{sim_type} (強度: {sim_intensity})" if sim_type else "列車停駛（紅燈警示）"
             advice_focus = f"目前的狀況是 {situation_desc}。重點推薦替代交通工具（客運或計程車），並參照官方轉乘資訊。"
         else:
-            situation_desc = f"列車延誤 {delay_time} 分鐘" if delay_time > 0 else "目前正常行駛"
-            advice_focus = "目前營運正常，但請依據底下官方轉乘資訊 or 網頁搜尋結果，推薦轉乘方案。"
+            if delay_time > 0:
+                situation_desc = f"列車延誤 {delay_time} 分鐘"
+                advice_focus = f"目前有 {delay_time} 分鐘延誤，請依據底下官方轉乘資訊提供轉乘建議。"
+            else:
+                situation_desc = "目前正常行駛"
+                advice_focus = "目前營運正常，請直接給予簡短正面建議即可。"
+            
             if is_earthquake:
-                advice_focus += " 注意：雖然尚未停駛，但因有地震紀錄，請提醒乘客注意安全與巡軌可能的延誤。"
+                advice_focus += " 注意：因有地震紀錄，請務必包含必要的地震避難指引與安全提醒。"
+            else:
+                advice_focus += " 注意：目前並無地震災害，請「絕對不要」提到任何避難、找堅固物體躲避等無關建議。"
 
         prompt = f"""
 你現在是「台鐵智慧行程助理」。目前的狀況是：「{query}」。
 {advice_focus}
+15字總結請反映目前的真實狀態（如：{situation_desc}）。
+即使有 RAG 歷史案例，若目前並無地震，也請不要提到避難。
 
 【參考歷史資料（RAG）】：
 {context_block}
