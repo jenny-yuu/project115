@@ -538,7 +538,7 @@ def ask_ai():
                 structured_data["emergency"] = ""
         # --- 後端強制注入機制 ---
         # 1. 版本標籤 (用於確認部署同步)
-        structured_data["summary"] = f"[v5] {structured_data.get('summary', '')}"
+        structured_data["summary"] = f"[v5-SYNC-PROOF] {structured_data.get('summary', '')}"
         
         # 2. 計程車資補強
         if fare_note and "routes" in structured_data:
