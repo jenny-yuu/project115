@@ -350,6 +350,10 @@ def index():
     print(f"--- [DEBUG: VERSION 4.0] ROOT INDEX HIT from {__file__} ---")
     return f"台鐵智慧行程助理後端已啟動！[DEBUG: VERSION 4.0] (API 正常運作中) - File: {__file__}"
 
+@app.route('/debug', methods=['GET'])
+def debug_version():
+    return jsonify({"version": "v5-SYNC-PROOF", "status": "online"})
+
 @app.route('/ask_ai', methods=['POST'])
 def ask_ai():
     try:
