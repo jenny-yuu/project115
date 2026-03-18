@@ -209,10 +209,16 @@ def get_official_transfers(station_name: str, token: str) -> str:
     mapping = {"taxi": "計程車", "bus": "公路運輸/公車", "rail": "軌道運輸/火車", "bike": "公共自行車"}
     sid = get_station_id(station_name)
 
-    # 1. 【最強優先】Firebase Cloud 資料 (與 D 槽 project 同步)
+    def _build_result(out: list) -> str:
+        """統一 return 前注入計程車車資估算"""
+        fare_note = get_taxi_fare_str(station_name)
+        if fare_note:
+            out.append(f"【計程車資估算 (至鄰近站)】\n{fare_note}")
+        return "\n\n".join(out)
+
+    # 1. 【最強優先】Firebase Cloud 資料
     if db:
         try:
-            # 優先查 scraped_transfers 專屬集合 (以 ID 索引)
             if sid:
                 doc = db.collection("scraped_transfers").document(sid).get()
                 if doc.exists:
@@ -222,9 +228,8 @@ def get_official_transfers(station_name: str, token: str) -> str:
                             output.append(f"【{v}】\n" + "\n".join([f"- {i}" for i in data[k]]))
                     if output:
                         print(f"   [Cloud] 從 Firebase/scraped_transfers 取得 {station_name}({sid}) 資料")
-                        return "\n\n".join(output)
+                        return _build_result(output)
 
-            # 其次查 stations 通用集合 (以名稱/模糊匹配)
             docs = db.collection("stations").stream()
             for doc in docs:
                 d = doc.to_dict()
@@ -237,21 +242,19 @@ def get_official_transfers(station_name: str, token: str) -> str:
                                 output.append(f"【{v}】\n" + "\n".join([f"- {i}" for i in data[k]]))
                         if output:
                             print(f"   [Cloud] 從 Firebase/stations 取得 {station_name} 資料")
-                            return "\n\n".join(output)
+                            return _build_result(output)
         except Exception as e:
             print(f"⚠️ Firebase 雲端查詢異常: {e}")
 
-    # 2. 【二級優先】D 槽 Project 資料 (scraped_transfers.json)
+    # 2. 【二級優先】scraped_transfers.json
     try:
         scraped_path = os.path.join(PATHS["PROJECT_DIR"], "scraped_transfers.json")
         if os.path.exists(scraped_path):
             with open(scraped_path, 'r', encoding='utf-8') as f:
                 scraped_data = json.load(f)
-                # 使用 ID 或名稱查詢
                 target_data = scraped_data.get(sid) if sid else None
                 if not target_data:
                     target_data = next((v for v in scraped_data.values() if station_name in v.get("station_name", "")), None)
-                
                 if target_data:
                     trans = target_data.get("transfers", {})
                     for k, v in mapping.items():
@@ -259,19 +262,17 @@ def get_official_transfers(station_name: str, token: str) -> str:
                             output.append(f"【{v}】\n" + "\n".join([f"- {i}" for i in trans[k]]))
                     if output:
                         print(f"   [Local] 從 D 槽 scraped_transfers.json 取得 {station_name} 資料")
-                        return "\n\n".join(output)
+                        return _build_result(output)
     except Exception as e:
         print(f"⚠️ D 槽資料讀取異常: {e}")
 
-    # 3. 【三級優先】OneDrive Research 資料 (StationTransfer.json)
+    # 3. 【三級優先】StationTransfer.json
     try:
-        # 修改為與本腳本同一層目錄
         research_path = os.path.join(BASE_DIR, "StationTransfer.json")
-            
         if os.path.exists(research_path):
             with open(research_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-                if "{" in content: # 簡單檢查是否為合法的 JSON
+                if "{" in content:
                     static_data = json.loads(content).get('StationTransfers', [])
                     for s in static_data:
                         if station_name in s.get('StationName', {}).get('Zh_tw', ''):
@@ -286,15 +287,12 @@ def get_official_transfers(station_name: str, token: str) -> str:
                                     output.append(f"{cat_name}\n" + "\n".join([f"- {i}" for i in descs]))
                             if output:
                                 print(f"   [Research] 從 OneDrive/StationTransfer.json 取得 {station_name} 資料")
-                                return "\n\n".join(output)
+                                return _build_result(output)
     except Exception as e:
         print(f"⚠️ OneDrive 研究資料讀取異常: {e}")
 
     if output:
-        taxi_fare_note = get_taxi_fare_str(station_name)
-        if taxi_fare_note:
-            output.append(f"【計程車資估算 (至鄰近站)】\n{taxi_fare_note}")
-        return "\n\n".join(output)
+        return _build_result(output)
 
     return "（查無官方轉乘資料，建議查詢網路搜尋結果）"
 
