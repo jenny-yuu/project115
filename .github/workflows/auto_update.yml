@@ -1,0 +1,45 @@
+name: Fetch Train Delay and Weather Data
+
+on:
+  schedule:
+    # 這裡的 Cron 語法代表每 5 分鐘自動執行一次 (這是 GitHub Actions 允許的最快排程)
+    - cron: '*/5 * * * *'
+  # 允許我們可以在 GitHub 網頁上手動點擊執行
+  workflow_dispatch:
+
+jobs:
+  update-firebase:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 取得程式碼
+        uses: actions/checkout@v4
+
+      - name: 🐍 設定 Python 環境
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip' # 快取套件加速執行
+
+      - name: 📦 安裝所需套件
+        run: |
+          cd backend_scripts
+          pip install -r requirements.txt
+
+      - name: 🔑 建立 Firebase 憑證檔案
+        env:
+          FIREBASE_KEY: ${{ secrets.FIREBASE_KEY }}
+        run: |
+          cd backend_scripts
+          # 將存放在 GitHub Secrets 的文字轉回成 json 檔案
+          echo "$FIREBASE_KEY" > your-firebase-adminsdk.json
+          
+      - name: 🚂 執行更新台鐵即時誤點狀態
+        run: |
+          cd backend_scripts
+          python update_live_delay_to_firebase.py
+          
+      - name: ⛅ 執行更新氣象署即時天氣
+        run: |
+          cd backend_scripts
+          python update_weather_to_firebase.py

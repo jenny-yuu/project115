@@ -3,12 +3,9 @@
 __pycache__/
 # 忽略所有 JSON 但排除必要的部屬檔案
 *.json
-!your-firebase-adminsdk.json
-!fb_stations.json
-!expert_knowledge.json
-!StationTransfer.json
 # 金鑰不要上傳到 GitHub
-data_pipeline/your-firebase-adminsdk.json
+your-firebase-adminsdk.json
+**/your-firebase-adminsdk.json
 error_trace.txt
 venv/
 .vscode/
