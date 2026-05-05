@@ -14,8 +14,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CREDENTIAL_PATH = "your-firebase-adminsdk.json"
 COLLECTION_NAME = "stations"
 
-# 氣象署 API
-CWA_KEY = "CWA-6DCD2E73-0932-4887-BF32-5D8190D54AF3"
+# 氣象署 API (優先從環境變數讀取，若無則使用預設)
+CWA_KEY = os.getenv("CWA_KEY", "CWA-6DCD2E73-0932-4887-BF32-5D8190D54AF3")
 RAIN_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001"
 WX_URL   = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001"
 FCST_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001"
@@ -93,10 +93,29 @@ def extract_eq_info(event):
 
 def init_firebase():
     try:
-        cred = credentials.Certificate(CREDENTIAL_PATH)
-        firebase_admin.initialize_app(cred)
+        # 1. 優先嘗試從環境變數讀取 (適合 GitHub Actions / Render)
+        service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+        if service_account_json:
+            import json
+            # 處理可能出現的轉義字元問題
+            service_account_info = json.loads(service_account_json, strict=False)
+            if "private_key" in service_account_info:
+                service_account_info["private_key"] = service_account_info["private_key"].replace("\\n", "\n")
+            cred = credentials.Certificate(service_account_info)
+            firebase_admin.initialize_app(cred)
+            print("✅ Firebase 初始化成功 (從環境變數)！")
+        else:
+            # 2. 如果沒有環境變數，則從本地檔案讀取
+            if os.path.exists(CREDENTIAL_PATH):
+                cred = credentials.Certificate(CREDENTIAL_PATH)
+                firebase_admin.initialize_app(cred)
+                print(f"✅ Firebase 初始化成功 (從檔案: {CREDENTIAL_PATH})！")
+            else:
+                raise FileNotFoundError(f"找不到金鑰檔案 {CREDENTIAL_PATH} 且未設定環境變數")
+        
         return firestore.client()
-    except ValueError: return firestore.client()
+    except ValueError: 
+        return firestore.client()
     except Exception as e:
         print(f"❌ Firebase 初始化失敗: {e}")
         exit()

@@ -8,3 +8,5 @@ beautifulsoup4==4.13.4
 firebase-admin==7.1.0
 gunicorn==23.0.0
 pandas==2.2.3
+jieba
+pinecone-text

@@ -23,28 +23,8 @@ except Exception as e:
     exit(1)
 
 INDEX_NAME = "disaster-rag"
-# 使用使用者提供的絕對路徑
-CSV_FILE_PATH = r"C:\Users\jenny\OneDrive\桌面\大專生計畫\事故報表\accidents_with_embeddings.csv"
-
-import re
-from collections import Counter
-
-def get_sparse_vector(text):
-    """將文字轉為 Sparse Vector (關鍵字頻率)"""
-    if not isinstance(text, str) or not text:
-        return {"indices": [], "values": []}
-    
-    # 簡單的正則斷詞
-    words = re.findall(r'[\u4e00-\u9fa5]+|[a-zA-Z0-9]+', text)
-    counts = Counter(words)
-    
-    indices = []
-    values = []
-    for word, count in counts.items():
-        idx = hash(word) % (2**31 - 1)
-        indices.append(abs(idx))
-        values.append(float(count))
-    return {"indices": indices, "values": values}
+# 改為相對路徑，建議放在專案根目錄下
+CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "accidents_with_embeddings.csv")
 
 def init_pinecone_index():
     print(f"正在檢查 Pinecone 中是否已經有名為 '{INDEX_NAME}' 的 Index...")
@@ -112,16 +92,10 @@ def upload_vectors(index):
                 "source": "railway_history"
             }
             
-            # --- 新增：產生 Sparse Vector (用於關鍵字精準匹配) ---
-            # 我們針對『事故概況』和『發生地點』產生關鍵字向量
-            sparse_text = f"{location} {situation} {cause_category}"
-            sparse_values = get_sparse_vector(sparse_text)
-            
             vectors_batch.append({
                 "id": doc_id,
-                "values": emb_list,         # Dense Vector (語義)
-                "sparse_values": sparse_values, # Sparse Vector (關鍵字)
-                "metadata": metadata        # Metadata (實際內容)
+                "values": emb_list, # 高維度向量數據
+                "metadata": metadata # 攜帶的實際內容
             })
             
             # 每累積 batch_size 筆資料，就批次上傳一次到 Pinecone

@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+.git/
+.vscode/
+.idea/
+.github/
+.gradle/
+gradle/
+app/
+build/
+*.log
+*.pyc
+.env

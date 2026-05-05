@@ -21,10 +21,27 @@ LIVE_DELAY_URL = "https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/LiveTrainDe
 def init_firebase():
     """初始化 Firebase 連線"""
     try:
-        cred = credentials.Certificate(CREDENTIAL_PATH)
-        firebase_admin.initialize_app(cred)
+        # 1. 優先嘗試從環境變數讀取 (適合 GitHub Actions / Render)
+        service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+        if service_account_json:
+            import json
+            # 處理可能出現的轉義字元問題
+            service_account_info = json.loads(service_account_json, strict=False)
+            if "private_key" in service_account_info:
+                service_account_info["private_key"] = service_account_info["private_key"].replace("\\n", "\n")
+            cred = credentials.Certificate(service_account_info)
+            firebase_admin.initialize_app(cred)
+            print("✅ Firebase 初始化成功 (從環境變數)！")
+        else:
+            # 2. 如果沒有環境變數，則從本地檔案讀取
+            if os.path.exists(CREDENTIAL_PATH):
+                cred = credentials.Certificate(CREDENTIAL_PATH)
+                firebase_admin.initialize_app(cred)
+                print(f"✅ Firebase 初始化成功 (從檔案: {CREDENTIAL_PATH})！")
+            else:
+                raise FileNotFoundError(f"找不到金鑰檔案 {CREDENTIAL_PATH} 且未設定環境變數")
+        
         db = firestore.client()
-        print("✅ Firebase 初始化成功！")
         return db
     except ValueError:
         return firestore.client()

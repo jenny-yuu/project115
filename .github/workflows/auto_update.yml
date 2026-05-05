@@ -10,6 +10,8 @@ on:
 jobs:
   update-firebase:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     
     steps:
       - name: 📥 取得程式碼
@@ -23,23 +25,17 @@ jobs:
 
       - name: 📦 安裝所需套件
         run: |
-          cd backend_scripts
           pip install -r requirements.txt
 
-      - name: 🔑 建立 Firebase 憑證檔案
-        env:
-          FIREBASE_KEY: ${{ secrets.FIREBASE_KEY }}
-        run: |
-          cd backend_scripts
-          # 將存放在 GitHub Secrets 的文字轉回成 json 檔案
-          echo "$FIREBASE_KEY" > your-firebase-adminsdk.json
-          
       - name: 🚂 執行更新台鐵即時誤點狀態
-        run: |
-          cd backend_scripts
-          python update_live_delay_to_firebase.py
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_KEY }}
+          TDX_CLIENT_ID: ${{ secrets.TDX_CLIENT_ID }}
+          TDX_CLIENT_SECRET: ${{ secrets.TDX_CLIENT_SECRET }}
+        run: python update_live_delay_to_firebase.py
           
-      - name: ⛅ 執行更新氣象署即時天氣
-        run: |
-          cd backend_scripts
-          python update_weather_to_firebase.py
+      - name: ⛅ 執行更新氣象署即時天氣 (含地震預警)
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_KEY }}
+          CWA_KEY: ${{ secrets.CWA_KEY }}
+        run: python update_weather_to_firebase.py
