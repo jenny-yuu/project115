@@ -41,9 +41,9 @@ try:
     client = openai.OpenAI(api_key=openai_key)
     pc = Pinecone(api_key=pinecone_key)
     pinecone_index = pc.Index("disaster-rag")
-    print("✅ OpenAI 與 Pinecone 初始化成功")
+    print("[SUCCESS] OpenAI and Pinecone initialized")
 except Exception as init_e:
-    print(f"❌ API 客戶端初始化失敗: {init_e}")
+    print(f"[ERROR] API client initialization failed: {init_e}")
 
 # --- 新增：Hybrid Search 關鍵字權重工具 ---
 def get_sparse_vector(text):
@@ -115,9 +115,9 @@ try:
                 print("找不到 Firebase 金鑰檔案，且未設定環境變數 FIREBASE_SERVICE_ACCOUNT_JSON")
 
     db = firestore.client()
-    print("Firestore Client 已啟動")
+    print("Firestore Client started")
 except Exception as firebase_e:
-    print(f"Firebase 初始化出現異常: {firebase_e}")
+    print(f"Firebase initialization error: {firebase_e}")
     db = None
 
 # 配置相對路徑
