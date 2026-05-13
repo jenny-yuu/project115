@@ -7,6 +7,10 @@ from firebase_admin import firestore
 import datetime
 import urllib3
 import pandas as pd
+from dotenv import load_dotenv
+
+# 載入 .env 檔案
+load_dotenv()
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -15,7 +19,12 @@ CREDENTIAL_PATH = "your-firebase-adminsdk.json"
 COLLECTION_NAME = "stations"
 
 # 氣象署 API (優先從環境變數讀取，若無則使用預設)
-CWA_KEY = os.getenv("CWA_KEY", "CWA-6DCD2E73-0932-4887-BF32-5D8190D54AF3")
+CWA_KEY = os.getenv("CWA_KEY")
+if not CWA_KEY:
+    CWA_KEY = "CWA-6DCD2E73-0932-4887-BF32-5D8190D54AF3"
+    print(f"ℹ️ 未偵測到 CWA_KEY 環境變數，使用預設金鑰。")
+else:
+    print(f"✅ 已從環境變數載入 CWA_KEY (前四碼: {CWA_KEY[:4]}...)")
 RAIN_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001"
 WX_URL   = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001"
 FCST_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001"
