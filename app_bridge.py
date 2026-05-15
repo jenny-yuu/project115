@@ -206,7 +206,8 @@ def get_nearby_bus_schedules(station_name: str, token: str) -> list:
         url_sta = "https://tdx.transportdata.tw/api/basic/v3/Rail/TRA/Station?$format=JSON"
         r_sta = requests.get(url_sta, headers=headers, timeout=10)
         stations = r_sta.json().get('Stations', [])
-        sta = next((s for s in stations if station_name in s['StationName']['Zh_tw']), None)
+        # 精確匹配：確保不會把 "東里" 誤判為 "白東里"
+        sta = next((s for s in stations if s['StationName']['Zh_tw'] == station_name or s['StationName']['Zh_tw'] == f"{station_name}車站"), None)
         if not sta: return []
         lon, lat = sta['StationPosition']['PositionLon'], sta['StationPosition']['PositionLat']
         
