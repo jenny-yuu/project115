@@ -277,6 +277,10 @@ def format_transfer_text(data: dict, fare_note: str = "") -> str:
             lines.append(f"[{v}]\n" + "\n".join([f"- {i}" for i in data[k]]))
     return "\n\n".join(lines)
 
+@app.route('/', methods=['GET'])
+def index():
+    return "台鐵智慧行程助理後端 [v4.0-Two-Stage-Final] - 系統已優化二階段查詢與計程車資功能"
+
 @app.route('/ask_ai', methods=['POST'])
 def ask_ai():
     try:
