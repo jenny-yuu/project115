@@ -4,6 +4,7 @@ import json
 import openai
 import requests
 import traceback
+import math
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -41,32 +42,9 @@ try:
     client = openai.OpenAI(api_key=openai_key)
     pc = Pinecone(api_key=pinecone_key)
     pinecone_index = pc.Index("disaster-rag")
-    print("[SUCCESS] OpenAI and Pinecone initialized")
+    print(" OpenAI 與 Pinecone 初始化成功")
 except Exception as init_e:
-    print(f"[ERROR] API client initialization failed: {init_e}")
-
-# --- 新增：Hybrid Search 關鍵字權重工具 ---
-def get_sparse_vector(text):
-    """
-    建立簡單的 Sparse Vector (類似 BM25)。
-    這對於「車站名」、「事故類型」等精確關鍵字非常有幫助。
-    """
-    # 簡單的斷詞與權重 (可以根據需求加入 jieba)
-    words = re.findall(r'[\u4e00-\u9fa5]+|[a-zA-Z0-9]+', text)
-    indices = []
-    values = []
-    
-    # 建立一個簡單的雜湊索引與頻率統計
-    from collections import Counter
-    counts = Counter(words)
-    
-    for i, (word, count) in enumerate(counts.items()):
-        # 使用簡單的雜湊將文字轉為索引 (Pinecone Sparse Vector 要求為 unsigned int)
-        idx = hash(word) % (2**31 - 1)
-        indices.append(abs(idx))
-        values.append(float(count))
-        
-    return {"indices": indices, "values": values}
+    print(f" API 客戶端初始化失敗: {init_e}")
 
 TDX_CLIENT_ID = os.getenv("TDX_CLIENT_ID")
 TDX_CLIENT_SECRET = os.getenv("TDX_CLIENT_SECRET")
@@ -97,9 +75,9 @@ try:
                 
                 cred = credentials.Certificate(service_account_info)
                 firebase_admin.initialize_app(cred)
-                print("Firebase 初始化成功 (從環境變數 [v24])")
+                print(" Firebase 初始化成功 (從環境變數 [v24])")
             except Exception as e_json:
-                print(f"環境變數 Firebase JSON 解析失敗: {e_json}")
+                print(f" 環境變數 Firebase JSON 解析失敗: {e_json}")
         else:
             # 本地端尋找檔案
             found = False
@@ -108,16 +86,16 @@ try:
                 if os.path.exists(cred_path):
                     cred = credentials.Certificate(cred_path)
                     firebase_admin.initialize_app(cred)
-                    print(f"Firebase 初始化成功 (自檔案: {f} [v22])")
+                    print(f" Firebase 初始化成功 (自檔案: {f} [v22])")
                     found = True
                     break
             if not found:
-                print("找不到 Firebase 金鑰檔案，且未設定環境變數 FIREBASE_SERVICE_ACCOUNT_JSON")
+                print(" 找不到 Firebase 金鑰檔案，且未設定環境變數 FIREBASE_SERVICE_ACCOUNT_JSON")
 
     db = firestore.client()
-    print("Firestore Client started")
+    print(" Firestore Client 已啟動")
 except Exception as firebase_e:
-    print(f"Firebase initialization error: {firebase_e}")
+    print(f" Firebase 初始化出現異常: {firebase_e}")
     db = None
 
 # 配置相對路徑
@@ -126,7 +104,7 @@ PATHS = {
     "MAPPING_FILE": os.path.join(BASE_DIR, "fb_stations.json")
 }
 
-# ─────────────── 基礎資料載入 (里程與車資) ───────────────
+#  基礎資料載入 (里程與車資) 
 STATION_DISTANCES = {}
 try:
     csv_path = os.path.join(BASE_DIR, "backend_scripts", "tra_eastern_mainline_EL_stations.csv")
@@ -136,9 +114,9 @@ try:
             reader = csv.DictReader(f)
             for row in reader:
                 STATION_DISTANCES[row['StationName']] = float(row['TraveledDistance'])
-        print(f"已載入 {len(STATION_DISTANCES)} 筆車站里程資料")
+        print(f" 已載入 {len(STATION_DISTANCES)} 筆車站里程資料")
 except Exception as e:
-    print(f"⚠️ 里程資料載入失敗: {e}")
+    print(f" 里程資料載入失敗: {e}")
 
 def get_taxi_fare_str(station_name: str) -> str:
     """估算到鄰近車站與主要轉運站的計程車資"""
@@ -149,7 +127,7 @@ def get_taxi_fare_str(station_name: str) -> str:
     target_key = next((k for k in STATION_DISTANCES.keys() if clean_name in k.replace("臺", "台")), None)
     
     if not target_key:
-        print(f"計程車資估算跳過：找不到車站 '{station_name}'")
+        print(f" 計程車資估算跳過：找不到車站 '{station_name}'")
         return ""
     
     names = list(STATION_DISTANCES.keys())
@@ -176,10 +154,10 @@ def get_taxi_fare_str(station_name: str) -> str:
         fare = 85 + (math.ceil((dist - 1.25) / 0.2) * 5 if dist > 1.25 else 0)
         notes.append(f"至 {t} 約 {dist:.1f}km / 估計車資 {int(fare)} 元")
     
-    print(f"生成計程車資估算 ({target_key}): {len(notes)} 筆建議")
+    print(f" 生成計程車資估算 ({target_key}): {len(notes)} 筆建議")
     return "\n".join(notes) if notes else ""
 
-# ─────────────── 工具函數 ───────────────
+#  工具函數 
 
 def get_station_id(station_name: str) -> str:
     """從 fb_stations.json 或 tdx_names 尋找車站 ID"""
@@ -215,34 +193,42 @@ def get_tdx_token():
         r.raise_for_status()
         return r.json().get("access_token")
     except Exception as e:
-        print(f"⚠️ TDX 取得 token 失敗: {e}")
+        print(f" TDX 取得 token 失敗: {e}")
         return None
 
 
 
 def get_nearby_bus_schedules(station_name: str, token: str) -> list:
-    """使用空間過濾 (Nearby) 查詢車站附近的公車預估到站時間 (ETA)"""
+    """[優化版] 二階段空間查詢"""
     if not token: return []
     try:
-        # 1. 先從 TDX 取得車站座標
-        url_sta = "https://tdx.transportdata.tw/api/basic/v3/Rail/TRA/Station?$format=JSON"
         headers = {"Authorization": f"Bearer {token}"}
+        url_sta = "https://tdx.transportdata.tw/api/basic/v3/Rail/TRA/Station?$format=JSON"
         r_sta = requests.get(url_sta, headers=headers, timeout=10)
         stations = r_sta.json().get('Stations', [])
         sta = next((s for s in stations if station_name in s['StationName']['Zh_tw']), None)
         if not sta: return []
         lon, lat = sta['StationPosition']['PositionLon'], sta['StationPosition']['PositionLat']
         
-        # 2. 同時查詢客運(InterCity)與市區公車(City)
-        results = []
+        if any(x in station_name for x in ["台北", "板橋", "瑞芳", "猴硐", "三貂嶺"]): city = "NewTaipei"
+        elif "基隆" in station_name: city = "Keelung"
+        elif "台東" in station_name or any(x in station_name for x in ["關山", "池上", "鹿野", "太麻里"]): city = "TaitungCounty"
+        else: city = "HualienCounty"
+
         spatial = f"nearby({lat},{lon},1000)"
+        url_nearby = f"https://tdx.transportdata.tw/api/basic/v2/Bus/Station/City/{city}?$spatialFilter={spatial}&$format=JSON"
+        r_nearby = requests.get(url_nearby, headers=headers, timeout=10)
+        if r_nearby.status_code != 200: return []
         
-        # 判斷縣市
-        city = "TaitungCounty" if "台東" in station_name or any(x in station_name for x in ["關山", "池上", "鹿野", "太麻里"]) else "HualienCounty"
+        nearby_data = r_nearby.json()
+        if not nearby_data: return []
+        stop_names = list(set([s['StationName']['Zh_tw'] for s in nearby_data]))[:5]
         
+        results = []
+        filter_str = " or ".join([f"StopName/Zh_tw eq '{name}'" for name in stop_names])
         urls = [
-            f"https://tdx.transportdata.tw/api/basic/v2/Bus/EstimatedTimeOfArrival/InterCity?$spatialFilter={spatial}&$format=JSON",
-            f"https://tdx.transportdata.tw/api/basic/v2/Bus/EstimatedTimeOfArrival/City/{city}?$spatialFilter={spatial}&$format=JSON"
+            f"https://tdx.transportdata.tw/api/basic/v2/Bus/EstimatedTimeOfArrival/City/{city}?$filter={filter_str}&$format=JSON",
+            f"https://tdx.transportdata.tw/api/basic/v2/Bus/EstimatedTimeOfArrival/InterCity?$filter={filter_str}&$format=JSON"
         ]
         
         for url in urls:
@@ -261,290 +247,96 @@ def get_nearby_bus_schedules(station_name: str, token: str) -> list:
             except: pass
         return sorted(results, key=lambda x: x['departure'])[:5]
     except Exception as e:
-        print(f"TDX Nearby 查詢失敗: {e}")
+        print(f"TDX 查詢失敗: {e}")
         return []
 
-
-def format_bus_schedules(schedules: list) -> str:
-    """將班次列表格式化為 prompt 用的文字"""
-    if not schedules:
-        return ""
-    lines = []
-    for s in schedules:
-        note = f"【{s.get('note', '')}】" if s.get("note") else ""
-        lines.append(f"- {note}[{s['departure']}] {s['route']} → {s['destination']}（{s['company']}）")
-    return "\n".join(lines)
-
 def get_official_transfers(station_name: str, token: str) -> dict:
-    """整合 Firebase (Cloud), D 槽 (Project), OneDrive (Research) 的多方轉乘資料"""
     if not station_name: return {}
-    
     sid = get_station_id(station_name)
-    output = {}
-
-    # 1. 【最強優先】Firebase Cloud 資料
     if db:
         try:
-            # A. scraped_transfers 集合
             if sid:
                 doc = db.collection("scraped_transfers").document(sid).get()
-                if doc.exists:
-                    data = doc.to_dict().get("transfers", {})
-                    if data:
-                        print(f"   [Cloud] 從 Firebase/scraped_transfers 取得 {station_name} 資料")
-                        return data
-
-            # B. stations 集合
-            docs = db.collection("stations").stream()
-            for doc in docs:
-                d = doc.to_dict()
-                if station_name in d.get("StationName", ""):
-                    official = d.get("official_transfers")
-                    if official and official.get("status") == "Available":
-                        data = official.get("data", {})
-                        if data:
-                            print(f"   [Cloud] 從 Firebase/stations 取得 {station_name} 資料")
-                            return data
-        except Exception as e:
-            print(f"⚠️ Firebase 雲端查詢異常: {e}")
-
-    # 2. 【二級優先】本地 scraped_transfers.json
+                if doc.exists: return doc.to_dict().get("transfers", {})
+        except: pass
     try:
         scraped_path = os.path.join(PATHS["PROJECT_DIR"], "scraped_transfers.json")
         if os.path.exists(scraped_path):
             with open(scraped_path, 'r', encoding='utf-8') as f:
-                scraped_data = json.load(f)
-                target_data = scraped_data.get(sid) if sid else None
-                if not target_data:
-                    target_data = next((v for v in scraped_data.values() if station_name in v.get("station_name", "")), None)
-                if target_data:
-                    data = target_data.get("transfers", {})
-                    if data:
-                        print(f"   [Local] 從 scraped_transfers.json 取得 {station_name} 資料")
-                        return data
-    except Exception as e:
-        print(f"本地 JSON 讀取異常: {e}")
-
-    # 3. 【三級優先】StationTransfer.json (原本的研究資料)
-    try:
-        research_path = os.path.join(BASE_DIR, "StationTransfer.json")
-        if os.path.exists(research_path):
-            with open(research_path, 'r', encoding='utf-8') as f:
-                static_data = json.load(f).get('StationTransfers', [])
-                for s in static_data:
-                    if station_name in s.get('StationName', {}).get('Zh_tw', ''):
-                        data = {}
-                        for mode in s.get('TransferModes', []):
-                            m_type = mode.get('TransferMode')
-                            key = "bus"
-                            if "Taxi" in m_type: key = "taxi"
-                            elif "Bicycle" in m_type: key = "bike"
-                            elif m_type in ["MRT", "HSR", "Train"]: key = "rail"
-                            
-                            descs = [d.get('Description') for d in mode.get('Descriptions', []) if d.get('Description')]
-                            if descs:
-                                if key not in data: data[key] = []
-                                data[key].extend(descs)
-                        if data:
-                            print(f"   [Research] 從 StationTransfer.json 取得 {station_name} 資料")
-                            return data
-    except Exception as e:
-        print(f"OneDrive 研究資料讀取異常: {e}")
-
+                data = json.load(f).get(sid if sid else "", {}).get("transfers", {})
+                if data: return data
+    except: pass
     return {}
 
 def format_transfer_text(data: dict, fare_note: str = "") -> str:
-    if not data: return "（查無官方轉乘資料）"
-    mapping = {"taxi": "計程車", "bus": "公路運輸/公車", "rail": "軌道運輸/火車", "bike": "公共自行車"}
+    if not data: return "(查無官方轉乘資料)"
+    mapping = {"taxi": "計程車", "bus": "客運", "rail": "火車", "bike": "YouBike"}
     lines = []
     for k, v in mapping.items():
         if data.get(k):
-            text = f"【{v}】\n" + "\n".join([f"- {i}" for i in data[k]])
-            if k == "taxi" and fare_note:
-                text += f"\n- (預估車資：\n{fare_note})"
-            lines.append(text)
+            lines.append(f"[{v}]\n" + "\n".join([f"- {i}" for i in data[k]]))
     return "\n\n".join(lines)
-
-
-def search_bus_info(station_name: str, destination: str = "") -> str:
-    """使用 DuckDuckGo 搜尋替代客運路線"""
-    if destination:
-        query = f'從 {station_name}車站 到 {destination} 怎麼搭車 客運'
-    else:
-        query = f'{station_name}車站 轉乘 附近客運站'
-    
-    url = f'https://duckduckgo.com/html/?q={urllib.parse.quote(query)}'
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
-    try:
-        html = urllib.request.urlopen(req, timeout=5).read().decode('utf-8')
-        soup = BeautifulSoup(html, 'html.parser')
-        results = []
-        # 嘗試抓取搜尋結果的標題或內容
-        blacklist = ["moovit", "app", "下載", "google map", "下一班", "時刻表查詢", "廣告"]
-        for div in soup.find_all('div', class_='result__body', limit=5):
-            snippet = div.find('a', class_='result__snippet')
-            if snippet:
-                text = snippet.get_text().strip()
-                # 過濾黑名單
-                if any(word in text.lower() for word in blacklist):
-                    continue
-                if len(text) > 15: results.append(f"- {text}")
-        return "\n".join(results) if results else "（建議告知乘客前往站前尋找客運/公車站牌，或聯絡當地計程車）"
-    except Exception as e:
-        print(f"⚠️ 搜尋失敗: {e}")
-        return "（無法執行網頁搜尋）"
-
-# ─────────────── Flask 路由 ───────────────
-
-@app.route('/', methods=['GET'])
-def index():
-    print(f"--- [v23-STABLE] ROOT INDEX HIT from {__file__} ---")
-    return f"台鐵智慧行程助理後端已啟動！[v23-STABLE] (API 正常運作中) - File: {__file__}"
-
-@app.route('/debug', methods=['GET'])
-def debug_version():
-    return jsonify({"version": "v11-VERBATIM-FAITHFUL", "status": "online"})
 
 @app.route('/ask_ai', methods=['POST'])
 def ask_ai():
     try:
         data = request.json
-        if not data:
-            return jsonify({
-                "structured": {
-                    "summary": "請求無效",
-                    "ai_advice": "接收到空請求，請重試。",
-                    "routes": [],
-                    "emergency": "",
-                    "nav_dest": "",
-                    "sources": ""
-                },
-                "is_serious": False
-            }), 400
-            
+        if not data: return jsonify({"structured": {"summary": "請求無效"}}, 400)
+        
         query = data.get('query', '')
         delay_time = data.get('delay_time', 0)
         is_suspended = data.get('is_suspended', False)
         station_name = data.get('station_name', '')
-        sim_type = data.get('sim_type', '')
-        sim_intensity = data.get('sim_intensity', 0)
-
-        print(f"--- [DEBUG] 新請求: {station_name} (延誤: {delay_time}m, 停駛: {is_suspended}, Sim: {sim_type} {sim_intensity}) ---")
         
-        # 0. 基礎資料補強 (計程車資預先估算)
+        print(f"接收新請求: {station_name}", flush=True)
         fare_note = get_taxi_fare_str(station_name)
-
-        # 1. RAG 向量搜尋
-        print("1. 生成 Embedding...")
-        try:
-            query_vector = get_embedding(query)
-        except Exception as e:
-            print(f"OpenAI Embedding 失敗: {e}")
-            raise e
-
-        print("2. 執行 Hybrid Search (混合檢索)...")
+        
+        # 1. RAG
+        query_vector = get_embedding(query)
         search_results = {'matches': []}
-        try:
-            if pinecone_index:
-                # 嘗試使用 Hybrid Search (Dense + Sparse)
-                try:
-                    sparse_vector = get_sparse_vector(query)
-                    search_results = pinecone_index.query(
-                        vector=query_vector,
-                        sparse_vector=sparse_vector,
-                        top_k=5,
-                        include_metadata=True
-                    )
-                    print("   [Hybrid] 成功執行混合檢索")
-                except Exception as hybrid_e:
-                    print(f"   [Fallback] Hybrid 失敗，切換為純語義檢索: {hybrid_e}")
-                    # 降級為原本的純語義檢索
-                    search_results = pinecone_index.query(
-                        vector=query_vector,
-                        top_k=5,
-                        include_metadata=True
-                    )
-            else:
-                print("Pinecone 未初始化，跳過查詢")
-        except Exception as e:
-            print(f"Pinecone 查詢失敗: {e}")
-
+        if pinecone_index:
+            search_results = pinecone_index.query(vector=query_vector, top_k=3, include_metadata=True)
+            
         context_texts = []
-        sources_list = []
         for match in search_results['matches']:
             meta = match['metadata']
-            cat = meta.get('category', '未知')
-            if "颱風" in cat:
-                info = f"[歷史颱風] {meta.get('name')}: {meta.get('start_time')} 強度 {meta.get('intensity')}"
-                sources_list.append(f"颱風：{meta.get('name', '')}")
-            elif "雨量" in cat:
-                info = f"[歷史雨量] 測站 {meta.get('station_no')}: {meta.get('name')} 颱風期間"
-                sources_list.append("雨量記錄")
-            elif "地震" in cat:
-                info = f"[歷史地震] 規模 {meta.get('magnitude')}: {meta.get('time')}"
-                sources_list.append(f"地震 M{meta.get('magnitude', '')}")
-            else:
-                info = f"[歷史事故] {meta.get('location')}: {meta.get('situation')}"
-                sources_list.append(f"事故：{meta.get('location', '')}")
-
-            solution = meta.get('solution', '請依站務人員指示慢行/停駛。')
-            context_texts.append(f"- {info}\n  歷年處置建議: {solution}")
-
+            context_texts.append(f"- {meta.get('situation')}\n  建議: {meta.get('solution')}")
+        
         context_block = "\n\n".join(context_texts)
-        sources_summary = "、".join(list(set(sources_list))[:3]) if sources_list else "歷史災害資料庫"
         
-        # --- 新增：從專家知識庫取得 SOP (作為 RAG 補充) ---
-        try:
-            expert_path = os.path.join(BASE_DIR, "expert_knowledge.json")
-            if os.path.exists(expert_path):
-                with open(expert_path, 'r', encoding='utf-8') as f:
-                    expert_data = json.load(f)
-                    expert_context = []
-                    for item in expert_data:
-                        match = False
-                        if "地震" in query and "地震" in item.get("category", ""): match = True
-                        if station_name and item.get("location") and station_name in item["location"]: match = True
-                        if match:
-                            expert_context.append(f"【官方SOP】{item.get('situation','')}: {item.get('solution','')}")
-                            sources_summary += "、" + item.get("source", "專家SOP")
-                    if expert_context:
-                        context_block += "\n\n" + "\n".join(expert_context)
-        except Exception as e:
-            print(f"讀取專家知識失敗: {e}")
-
-        print(f"   找到 {len(context_texts)} 筆參考資料 + 專家 SOP")
-
-        # 2. 查詢 TDX 真實班次與網頁搜尋
-        print(f"3. 查詢 {station_name} 的即時交通資訊...")
-        try:
-            tdx_token = get_tdx_token()
-        except:
-            tdx_token = None
-            
+        # 2. TDX & Transfers
+        tdx_token = get_tdx_token()
         bus_text = ""
+        official_transfer_data = {}
         official_transfer_text = ""
-        user_dest = data.get('destination', '')
         
-        try:
-            search_text = search_bus_info(station_name, user_dest)
-        except:
-            search_text = "（網路搜尋暫時無法使用）"
+        if station_name and tdx_token:
+            bus_schedules = get_nearby_bus_schedules(station_name, tdx_token)
+            if bus_schedules:
+                bus_text = "\n".join([f"- {b['route']}: {b['departure']}" for b in bus_schedules])
+            official_transfer_data = get_official_transfers(station_name, tdx_token)
+            official_transfer_text = format_transfer_text(official_transfer_data, fare_note)
 
-        if station_name:
-            if tdx_token:
-                try:
-                    bus_schedules = get_nearby_bus_schedules(station_name, tdx_token)
-                    if bus_schedules:
-                        bus_text = format_bus_schedules(bus_schedules)
-                except: pass
-                
-                try:
-                    official_transfer_data = get_official_transfers(station_name, tdx_token)
-                    official_transfer_text = format_transfer_text(official_transfer_data, fare_note)
-                except: pass
-            else:
-                official_transfer_data = get_official_transfers(station_name, None)
-                official_transfer_text = format_transfer_text(official_transfer_data, fare_note)
+        # 3. GPT
+        prompt = f"情境:{query}\n延誤:{delay_time}\n歷史:{context_block}\n公車:{bus_text}\n轉乘:{official_transfer_text}\n格式:JSON(summary, ai_advice, routes, emergency, nav_dest)"
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+            max_tokens=500
+        )
+        structured_data = json.loads(response.choices[0].message.content)
+        
+        # 後端強制注入 (計程車)
+        if "routes" in structured_data:
+            if not any("計程車" in str(r.get("title")) for r in structured_data["routes"]):
+                structured_data["routes"].insert(0, {"type": "other", "title": "計程車", "departure": "站前", "duration": fare_note.split("\n")[0] if fare_note else "現場叫車", "priority": "建議"})
+
+        return jsonify({"structured": structured_data, "is_serious": is_suspended})
+    except Exception as e:
+        print(f"錯誤: {e}", flush=True)
+        return jsonify({"structured": {"summary": "服務異常"}}, 200)
 
         # 3. 呼叫 GPT
         # 判定是否為地震急件
@@ -682,7 +474,7 @@ def ask_ai():
         })
 
     except Exception as e:
-        print(f"ask_ai 發生錯誤: {e}")
+        print(f" ask_ai 發生錯誤: {e}")
         traceback.print_exc()
         return jsonify({
             "structured": {
@@ -756,7 +548,7 @@ def predict_recovery():
                     "source": "歷史災害資料庫(RAG)"
                 })
         except Exception as rag_e:
-            print(f"   RAG 檢索異常: {rag_e}")
+            print(f"    RAG 檢索異常: {rag_e}")
 
         context_block = "\n\n".join(history_context) if history_context else "無直接相關歷史案例。"
         
@@ -796,11 +588,11 @@ def predict_recovery():
              prediction["recovery_time"] = "2 ~ 4 小時"
              prediction["reason"] = "參考震度 4 級以上巡軌 SOP 保底推估"
 
-        print(f"推估結果: {prediction.get('recovery_time')} ({prediction.get('reason')})")
+        print(f" 推估結果: {prediction.get('recovery_time')} ({prediction.get('reason')})")
         return jsonify(prediction)
 
     except Exception as e:
-        print(f"推估失敗: {e}")
+        print(f" 推估失敗: {e}")
         return jsonify({"recovery_time": "2 ~ 4 小時 (系統預估)", "reason": "連線異常，採標竿 SOP 推估"}), 200
 
 if __name__ == '__main__':
