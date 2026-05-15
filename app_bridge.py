@@ -53,7 +53,7 @@ TDX_CLIENT_SECRET = os.getenv("TDX_CLIENT_SECRET")
 try:
     if not firebase_admin._apps:
         # 優先從環境變數載入 (適合 Render/生產環境，保護金鑰不外流)
-        service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+        service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT")
         if service_account_json:
             try:
                 # 預處理 1：移除所有不可見控制字元 (如 \r 之類)
